@@ -1,11 +1,11 @@
-import { StreamParser, type ParsedContent } from "./chatParser";
+import { StreamParser, type ParseResult } from "./chatParser";
 
 interface ChatStreamParams {
   prompt: string;
   sessionId: string;
   providerId: string;
   modelName: string;
-  onChunk: (content: ParsedContent) => void;
+  onChunk: (result: ParseResult) => void;
   onComplete: () => void;
   onError: (error: Error) => void;
 }
@@ -34,6 +34,7 @@ export function chatStream({
         const jsonStr = trimmedLine.slice(5);
 
         if (jsonStr === "[DONE]") {
+          // 流式结束
           onComplete();
           return;
         }
@@ -43,8 +44,10 @@ export function chatStream({
           const content = data.content;
 
           if (content) {
-            parser.parse(content);
-            onChunk(parser.getResult());
+            const result = parser.parse(content);
+            if (result) {
+              onChunk(result);
+            }
           }
         } catch (e) {
           console.error("Parse error:", e, "Line:", trimmedLine);

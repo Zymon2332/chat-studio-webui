@@ -1,76 +1,48 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowDown } from "lucide-react";
 import { ChatInput, type ChatInputRef } from "@/components/chat/ChatInput";
-import { ChatMessageList, type ChatMessageListRef } from "@/components/chat/ChatMessageList";
+import { ChatMessages } from "@/components/chat/ChatMessages";
 import { getSessionMessages } from "@/lib/session";
 import { useChat } from "@/hooks/useChat";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import type { Message, AIMessage } from "@/types/chat";
+import type { Message } from "@/types/chat";
 import type { Model } from "@/lib/models";
 
-// 转换旧格式消息到新格式（包含 blocks）
-function normalizeMessage(message: Message, allMessages: Message[] = []): Message {
-  if (message.messageType === "AI") {
-    const aiMessage = message as AIMessage;
-    // 如果已经有 blocks 且不为空，直接返回
-    if (aiMessage.blocks && aiMessage.blocks.length > 0) {
-      return message;
-    }
-    
-    // 转换旧格式到新格式
-    const blocks: AIMessage['blocks'] = [];
-    
-    // 使用类型断言访问旧字段
-    const oldMessage = message as any;
-    
-    // 处理 thinking
-    if (oldMessage.thinking) {
-      if (Array.isArray(oldMessage.thinking)) {
-        oldMessage.thinking.forEach((t: string) => {
-          if (t) blocks.push({ type: 'think', content: t });
+// 将后端 API 返回的消息转换为前端使用的格式
+// 后端返回格式: { type: "USER"|"AI", contents: [...], attributes: {...} }
+// 前端内部格式: { messageType: "USER"|"AI", contents: [...], attributes: {...} }
+function normalizeMessages(messages: any[]): Message[] {
+  const result: Message[] = [];
+
+  for (const message of messages) {
+    // 后端使用 'type' 字段，映射到前端的 'messageType'
+    const messageType = message.type || message.messageType;
+
+    if (messageType === "USER") {
+      // USER 消息 - 从 attributes 获取日期等信息
+      result.push({
+        messageType: "USER",
+        contents: message.contents || [],
+        attributes: message.attributes || {},
+      });
+    } else if (messageType === "AI") {
+      // AI 消息 - 后端直接返回新格式
+      if (message.contents && message.contents.length > 0) {
+        result.push({
+          messageType: "AI",
+          contents: message.contents.map((content: any) => ({
+            text: content.text || "",
+            thinking: content.thinking || "",
+            executedTools: content.executedTools || [],
+            attributes: content.attributes || {},
+          })),
         });
-      } else if (typeof oldMessage.thinking === 'string') {
-        // 兼容字符串格式的 thinking
-        blocks.push({ type: 'think', content: oldMessage.thinking });
       }
     }
-    
-    // 处理 text（放在 tool 之前）
-    if (oldMessage.text) {
-      blocks.push({ type: 'text', content: oldMessage.text });
-    }
-    
-    // 处理 toolRequests（放在 text 之后）
-    if (oldMessage.toolRequests) {
-      oldMessage.toolRequests.forEach((tool: any) => {
-        // 在 AI 消息本身的 toolResponses 中查找
-        let response = oldMessage.toolResponses?.find((r: any) => r.id === tool.id);
-        
-        // 如果没找到，在所有消息中查找 TOOL_EXECUTION_RESULT
-        if (!response) {
-          const toolResultMsg = allMessages.find(
-            (m): m is Extract<Message, { messageType: "TOOL_EXECUTION_RESULT" }> =>
-              m.messageType === "TOOL_EXECUTION_RESULT" &&
-              (m as any).toolResponse?.id === tool.id
-          );
-          if (toolResultMsg) {
-            response = toolResultMsg.toolResponse;
-          }
-        }
-        
-        blocks.push({ type: 'tool', request: tool, response });
-      });
-    }
-    
-    return {
-      ...aiMessage,
-      blocks: blocks.length > 0 ? blocks : []
-    };
   }
-  return message;
+
+  return result;
 }
 
 function UserMessageSkeleton() {
@@ -95,51 +67,61 @@ export function Conversation() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const chatInputRef = useRef<ChatInputRef>(null);
-  const messageListRef = useRef<ChatMessageListRef>(null);
-  const [scrollState, setScrollState] = useState({ atBottom: true, hasOverflow: false });
-  
-  // 使用 useCallback 包装滚动状态变化回调，避免无限循环
-  const handleScrollStateChange = useCallback((state: { atBottom: boolean; hasOverflow: boolean }) => {
-    setScrollState(state);
-  }, []);
   
   const [initialModel] = useState<Model | null>(() => {
-    const state = location.state as { model?: Model; initialMessage?: string } | null;
+    const state = location.state as { model?: Model; initialMessage?: string; isNewSession?: boolean } | null;
     return state?.model || null;
   });
   const [initialMessage] = useState<string | null>(() => {
-    const state = location.state as { model?: Model; initialMessage?: string } | null;
+    const state = location.state as { model?: Model; initialMessage?: string; isNewSession?: boolean } | null;
     return state?.initialMessage || null;
+  });
+  const [isNewSession] = useState<boolean>(() => {
+    const state = location.state as { model?: Model; initialMessage?: string; isNewSession?: boolean } | null;
+    return state?.isNewSession || false;
   });
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const initialMessageSent = useRef(false);
+  const loadingStartTimeRef = useRef<number>(0);
+  const MIN_LOADING_DISPLAY_TIME = 300; // 最小显示时间 300ms
 
-  const { messages, streamingMessage, isStreaming, sendMessage, cancelStream } = useChat(id || "");
-
-  // 计算是否显示悬浮球：有滚动内容且不在底部
-  const showScrollButton = scrollState.hasOverflow && !scrollState.atBottom;
+  const { messages, streamingContent, isStreaming, currentAIMessageId, sendMessage, cancelStream } = useChat(id || "");
 
   // 加载历史消息
   useEffect(() => {
+    // 如果是新创建的会话，跳过加载历史消息（直接显示输入框）
+    if (isNewSession) {
+      setIsLoadingHistory(false);
+      return;
+    }
+
     const fetchMessages = async () => {
       if (!id) return;
       
+      loadingStartTimeRef.current = Date.now();
       setIsLoadingHistory(true);
+      
       try {
         const data = await getSessionMessages(id);
-        // 转换旧格式消息到新格式（传递所有消息用于查找 tool response）
-        const normalizedData = data.map(msg => normalizeMessage(msg, data));
+        // 转换格式
+        const normalizedData = normalizeMessages(data);
         setHistoryMessages(normalizedData);
       } catch {
         toast.error("加载历史消息失败");
       } finally {
-        setIsLoadingHistory(false);
+        // 计算已显示时间，确保最小显示时间
+        const elapsedTime = Date.now() - loadingStartTimeRef.current;
+        const remainingTime = Math.max(0, MIN_LOADING_DISPLAY_TIME - elapsedTime);
+        
+        setTimeout(() => {
+          setIsLoadingHistory(false);
+        }, remainingTime);
       }
     };
 
     fetchMessages();
-  }, [id]);
+  }, [id, isNewSession]);
 
   // 自动发送 initialMessage
   useEffect(() => {
@@ -168,11 +150,6 @@ export function Conversation() {
     await sendMessage(text, model);
   };
 
-  // 处理回到底部
-  const handleScrollToBottom = () => {
-    messageListRef.current?.scrollToBottom('smooth');
-  };
-
   // 合并历史消息和当前对话消息
   const displayMessages: Message[] = [...historyMessages, ...messages];
 
@@ -191,28 +168,12 @@ export function Conversation() {
           </div>
         </div>
       ) : (
-        <ChatMessageList
-          ref={messageListRef}
+        <ChatMessages
           messages={displayMessages}
-          streamingMessage={streamingMessage}
+          streamingContent={streamingContent}
           isStreaming={isStreaming}
-          onScrollStateChange={handleScrollStateChange}
+          currentAIMessageId={currentAIMessageId}
         />
-      )}
-
-      {/* 回到底部悬浮按钮 - 固定在输入框上方 */}
-      {showScrollButton && (
-        <div className="absolute bottom-[140px] left-1/2 -translate-x-1/2 z-10">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleScrollToBottom}
-            className="rounded-full shadow-lg hover:shadow-xl"
-            title="回到底部"
-          >
-            <ArrowDown className="h-4 w-4" />
-          </Button>
-        </div>
       )}
 
       {/* 底部输入框 - 固定不滚动 */}

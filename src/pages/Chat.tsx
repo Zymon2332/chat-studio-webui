@@ -30,7 +30,8 @@ export function Chat() {
       navigate(`/conversation/${sessionId}`, {
         state: {
           model,
-          initialMessage: message
+          initialMessage: message,
+          isNewSession: true  // 标记为新创建的会话
         }
       });
 

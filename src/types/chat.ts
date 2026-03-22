@@ -1,49 +1,59 @@
-export interface ToolRequest {
-  id: string;
-  name: string;
-  argument: string;
-}
-
-export interface ToolResponse {
-  id: string;
+// 新 API 数据格式 - 后端返回的执行工具记录
+export interface ApiExecutedTool {
   toolName: string;
-  text?: string;
-  isError: boolean | null;
+  toolArguments: string;
+  toolResult: string;
+  isError: boolean;
 }
 
+// 新 API 数据格式 - AI 消息内容
+export interface ApiAIContent {
+  text: string;
+  thinking: string;
+  executedTools: ApiExecutedTool[];
+  attributes: Record<string, any>;
+}
+
+// 用户消息 - 新格式
 export interface UserMessage {
   contents: Array<{ contentType: "TEXT"; text: string }>;
   messageType: "USER";
-  dateTime: string;
+  attributes: Record<string, any>;  // 包含 dateTime 等字段
 }
 
-// 内容块类型：用于按顺序存储 AI 消息的各种内容
-export type ContentBlock = 
-  | { type: 'think'; content: string }
-  | { type: 'tool'; request: ToolRequest; response?: ToolResponse }
-  | { type: 'text'; content: string };
-
+// AI 消息 - 新格式
 export interface AIMessage {
   messageType: "AI";
-  blocks: ContentBlock[];  // 按顺序存储所有内容块
-  dateTime: string;
+  contents: ApiAIContent[];
+  id?: string;  // 可选：用于流式占位消息标识
 }
 
-export interface ToolExecutionResultMessage {
-  messageType: "TOOL_EXECUTION_RESULT";
-  toolResponse: {
-    id: string;
-    toolName: string;
-    text?: string;
-    isError: boolean | null;
+// 流式内容项 - 用于渲染
+export interface StreamingItem {
+  id: string;
+  type: 'think' | 'text' | 'tool';
+  content: string;
+  isComplete?: boolean;  // 标记 think 是否结束（收到 [END] 标记时为 true）
+  data?: {
+    id?: string;
+    name?: string;
+    argument?: string;
+    response?: {
+      text: string;
+      isError: boolean | null;
+    };
   };
-  dateTime: string;
+}
+
+// 流式状态 - 用于累积和管理流式内容
+export interface StreamingContent {
+  items: StreamingItem[];
+  currentIndex: number;
 }
 
 export type Message = 
   | UserMessage 
-  | AIMessage 
-  | ToolExecutionResultMessage;
+  | AIMessage;
 
 export function isUserMessage(message: Message): message is UserMessage {
   return message.messageType === "USER";
@@ -51,10 +61,4 @@ export function isUserMessage(message: Message): message is UserMessage {
 
 export function isAIMessage(message: Message): message is AIMessage {
   return message.messageType === "AI";
-}
-
-export function isToolExecutionResultMessage(
-  message: Message
-): message is ToolExecutionResultMessage {
-  return message.messageType === "TOOL_EXECUTION_RESULT";
 }

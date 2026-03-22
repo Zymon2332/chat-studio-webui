@@ -3,12 +3,13 @@ import { Copy, ThumbsUp, ThumbsDown, Share2, Check, CheckCircle2 } from "lucide-
 
 interface MessageActionsProps {
   mode: "user" | "ai";
-  dateTime: string;
+  dateTime?: string;
   onCopy?: () => void;
   onLike?: () => void;
   onDislike?: () => void;
   onShare?: () => void;
   isComplete?: boolean;
+  className?: string;
 }
 
 export function MessageActions({
@@ -18,9 +19,12 @@ export function MessageActions({
   onLike,
   onDislike,
   onShare,
-  isComplete = true
+  isComplete = true,
+  className,
 }: MessageActionsProps) {
   const [copied, setCopied] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [disliked, setDisliked] = useState(false);
 
   const handleCopy = () => {
     onCopy?.();
@@ -28,9 +32,21 @@ export function MessageActions({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleLike = () => {
+    setLiked(!liked);
+    setDisliked(false);
+    onLike?.();
+  };
+
+  const handleDislike = () => {
+    setDisliked(!disliked);
+    setLiked(false);
+    onDislike?.();
+  };
+
   if (mode === "user") {
     return (
-      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div className={`flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${className || ""}`}>
         <button
           onClick={handleCopy}
           className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-md transition-colors"
@@ -42,7 +58,7 @@ export function MessageActions({
             <Copy className="h-3.5 w-3.5" />
           )}
         </button>
-        <span className="text-xs text-stone-400">{dateTime}</span>
+        {dateTime && <span className="text-xs text-stone-400">{dateTime}</span>}
       </div>
     );
   }
@@ -56,27 +72,35 @@ export function MessageActions({
           <span className="text-xs">完成</span>
         </div>
       )}
-      
+
       {/* 分隔线 - 常显 */}
       <div className="w-px h-3 bg-stone-300" />
-      
+
       {/* 操作按钮 - 常显 */}
       <button
-        onClick={onLike}
-        className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-md transition-colors"
+        onClick={handleLike}
+        className={`p-1.5 rounded-md transition-colors ${
+          liked
+            ? "text-blue-500 bg-blue-50"
+            : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
+        }`}
         title="点赞"
       >
         <ThumbsUp className="h-3.5 w-3.5" />
       </button>
-      
+
       <button
-        onClick={onDislike}
-        className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-md transition-colors"
+        onClick={handleDislike}
+        className={`p-1.5 rounded-md transition-colors ${
+          disliked
+            ? "text-red-500 bg-red-50"
+            : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
+        }`}
         title="点踩"
       >
         <ThumbsDown className="h-3.5 w-3.5" />
       </button>
-      
+
       <button
         onClick={handleCopy}
         className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-md transition-colors"
@@ -88,7 +112,7 @@ export function MessageActions({
           <Copy className="h-3.5 w-3.5" />
         )}
       </button>
-      
+
       <button
         onClick={onShare}
         className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-md transition-colors"
@@ -96,11 +120,6 @@ export function MessageActions({
       >
         <Share2 className="h-3.5 w-3.5" />
       </button>
-      
-      {/* 时间 - 悬停显示 */}
-      <span className="text-xs text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        {dateTime}
-      </span>
     </div>
   );
 }
