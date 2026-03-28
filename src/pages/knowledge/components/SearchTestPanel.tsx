@@ -1,71 +1,66 @@
+'use client';
+
 import { useState } from 'react';
-import { Search, X, Send, Loader2, BookOpen, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { X, Search, Settings, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { KnowledgeBaseConfig, RetrieveResult } from '../types';
+import { RetrievalConfigForm } from './RetrievalConfigForm';
+import { retrieveKnowledgeBase } from '@/lib/knowledge';
+import { toast } from 'sonner';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
-
-interface SearchResult {
-  id: string;
-  documentName: string;
-  content: string;
-  relevance: number;
-  chunks: number;
-}
 
 interface SearchTestPanelProps {
-  isOpen: boolean;
   onClose: () => void;
   knowledgeBaseName: string;
+  kbId: number;
 }
 
-// Mock 检索结果
-const mockSearchResults: SearchResult[] = [
-  {
-    id: 'result-1',
-    documentName: '2024产品规划.pdf',
-    content: '我们的产品路线图包括三个主要阶段：第一阶段将重点开发核心AI对话功能，第二阶段引入多模态能力...',
-    relevance: 0.95,
-    chunks: 3,
-  },
-  {
-    id: 'result-2',
-    documentName: '用户调研报告.pdf',
-    content: '根据用户调研，85%的受访者表示需要更智能的上下文理解能力，这是提升用户体验的关键...',
-    relevance: 0.87,
-    chunks: 2,
-  },
-  {
-    id: 'result-3',
-    documentName: 'API设计规范.docx',
-    content: 'API设计遵循RESTful原则，所有端点都需要进行身份验证，支持OAuth 2.0和API Key两种方式...',
-    relevance: 0.72,
-    chunks: 1,
-  },
-];
-
-export function SearchTestPanel({ isOpen, onClose, knowledgeBaseName }: SearchTestPanelProps) {
+export function SearchTestPanel({ onClose, knowledgeBaseName, kbId }: SearchTestPanelProps) {
   const [query, setQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
+  const [config, setConfig] = useState<KnowledgeBaseConfig>({
+    retrievalMode: 'HYBRID',
+    topK: 5,
+    embedMinScore: 0.7,
+    fusionStrategy: 'RRF',
+    topN: 5,
+    rerankMinScore: 0.7,
+    denseWeight: 0.7,
+    sparseWeight: 0.3,
+  });
+  const [tempConfig, setTempConfig] = useState(config);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [results, setResults] = useState<RetrieveResult[]>([]);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   const handleSearch = async () => {
     if (!query.trim()) return;
     
-    setIsSearching(true);
-    setHasSearched(true);
-    
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setResults(mockSearchResults);
-    setIsSearching(false);
+    try {
+      setIsLoading(true);
+      setHasSearched(true);
+      
+      const response = await retrieveKnowledgeBase({
+        kbId,
+        content: query,
+        config,
+      });
+      
+      setResults(response);
+    } catch (error) {
+      toast.error('检索失败，请稍后重试');
+      console.error('Search failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -75,138 +70,192 @@ export function SearchTestPanel({ isOpen, onClose, knowledgeBaseName }: SearchTe
     }
   };
 
-  const clearSearch = () => {
-    setQuery('');
-    setResults([]);
-    setHasSearched(false);
+  const toggleExpand = (id: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleOpenSettings = () => {
+    setTempConfig({ ...config });
+    setShowSettings(true);
+  };
+
+  const handleApplySettings = () => {
+    setConfig(tempConfig);
+    setShowSettings(false);
+  };
+
+  const handleCancelSettings = () => {
+    setShowSettings(false);
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-[480px] sm:max-w-[480px] flex flex-col">
-        <SheetHeader className="border-b pb-4">
-          <SheetTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            检索测试
-          </SheetTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            测试知识库 "{knowledgeBaseName}" 的检索效果
-          </p>
-        </SheetHeader>
+    <>
+      {/* 主面板 */}
+      <div className="h-full flex flex-col bg-background">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <div>
+            <h2 className="text-lg font-semibold">召回测试</h2>
+            <p className="text-sm text-muted-foreground">
+              根据给定的查询文本测试「{knowledgeBaseName}」的召回效果
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
 
-        <div className="flex flex-col flex-1 overflow-hidden py-4">
-          {/* 输入区域 */}
-          <div className="space-y-4">
-            <div className="relative">
-              <Textarea
-                placeholder="输入测试问题，例如：产品的核心功能是什么？"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="min-h-[100px] resize-none pr-12"
-              />
-              <button
-                onClick={clearSearch}
-                className={cn(
-                  'absolute top-2 right-2 p-1 rounded hover:bg-accent transition-opacity',
-                  query ? 'opacity-100' : 'opacity-0'
-                )}
-              >
-                <X className="h-4 w-4" />
-              </button>
+        {/* 主内容区 */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* 左侧：查询区 */}
+          <div className="w-1/2 p-6 border-r overflow-y-auto">
+            {/* 查询输入框 */}
+            <div className="space-y-4">
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">源文本</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenSettings}
+                    className="h-7 gap-1"
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                    配置
+                  </Button>
+                </div>
+                <Textarea
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="请输入文本，建议使用简短的陈述句"
+                  className="min-h-[200px] resize-none"
+                  maxLength={200}
+                />
+                <div className="flex items-center justify-between mt-2">
+                  <span className={cn(
+                    "text-xs",
+                    query.length > 200 ? "text-destructive" : "text-muted-foreground"
+                  )}>
+                    {query.length} / 200
+                  </span>
+                  <Button
+                    onClick={handleSearch}
+                    disabled={!query.trim()}
+                    size="sm"
+                  >
+                    测试
+                  </Button>
+                </div>
+              </div>
             </div>
-            
-            <Button
-              onClick={handleSearch}
-              disabled={!query.trim() || isSearching}
-              className="w-full gap-2"
-            >
-              {isSearching ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  检索中...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  开始检索
-                </>
-              )}
-            </Button>
           </div>
 
-          {/* 结果区域 */}
-          <div className="flex-1 overflow-y-auto mt-6 space-y-4">
-            {!hasSearched && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <BookOpen className="h-8 w-8 text-primary" />
-                </div>
-                <p className="text-muted-foreground">
-                  输入问题开始测试检索效果
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  系统将从知识库中检索最相关的文档片段
-                </p>
+          {/* 右侧：结果展示区 */}
+          <div className="w-1/2 p-6 overflow-y-auto">
+            {!hasSearched ? (
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                <Search className="h-12 w-12 mb-4 opacity-20" />
+                <p className="text-sm">输入查询文本并点击测试按钮查看检索结果</p>
               </div>
-            )}
-
-            {hasSearched && !isSearching && results.length > 0 && (
-              <>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>找到 {results.length} 个相关片段</span>
-                  <span>按相关度排序</span>
+            ) : isLoading ? (
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                <Loader2 className="h-12 w-12 mb-4 animate-spin opacity-50" />
+                <p className="text-sm">检索中...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground">
+                  共找到 {results.length} 个结果
                 </div>
-
-                <div className="space-y-3">
-                  {results.map((result, index) => (
-                    <div
-                      key={result.id}
-                      className="p-4 rounded-lg border hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                            {index + 1}
+                {results.map((result: RetrieveResult, index: number) => (
+                  <div
+                    key={result.vectorId}
+                    className="border rounded-lg p-4 space-y-3 hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-2xl font-bold text-primary">
+                            {(result.score * 100).toFixed(1)}%
                           </span>
-                          <div className="flex items-center gap-1.5 text-sm font-medium">
-                            <FileText className="h-4 w-4 text-muted-foreground" />
-                            {result.documentName}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">
-                            {result.chunks} 片段
+                            #{index + 1}
                           </span>
-                          <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                            {(result.relevance * 100).toFixed(0)}% 匹配
-                          </span>
+                        </div>
+                        <div className="text-sm font-medium truncate">
+                          {result.docName}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Vector ID: {result.vectorId} · 长度: {result.charLength} 字符
                         </div>
                       </div>
-                      
-                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
-                        {result.content}
-                      </p>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {hasSearched && !isSearching && results.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                  <Search className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <p className="text-muted-foreground">未找到相关结果</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  尝试使用不同的关键词或添加更多文档
-                </p>
+                    <div className="relative">
+                      <p className={cn(
+                        "text-sm text-muted-foreground",
+                        !expandedItems.has(result.vectorId) && "line-clamp-3"
+                      )}>
+                        {result.text}
+                      </p>
+                      {result.text.length > 100 && (
+                        <button
+                          onClick={() => toggleExpand(result.vectorId)}
+                          className="mt-2 text-xs text-primary hover:underline flex items-center gap-1"
+                        >
+                          {expandedItems.has(result.vectorId) ? (
+                            <>
+                              <ChevronUp className="h-3 w-3" />
+                              收起
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-3 w-3" />
+                              展开
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+
+      {/* 配置面板 */}
+      <Sheet open={showSettings} onOpenChange={setShowSettings}>
+        <SheetContent className="w-[600px] sm:max-w-[600px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>检索配置</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 px-6">
+            <RetrievalConfigForm 
+              config={tempConfig} 
+              onChange={setTempConfig}
+            />
+            {/* 按钮 */}
+            <div className="flex gap-2 pt-6 mt-6 border-t">
+              <Button variant="outline" className="flex-1" onClick={handleCancelSettings}>
+                取消
+              </Button>
+              <Button className="flex-1" onClick={handleApplySettings}>
+                应用
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

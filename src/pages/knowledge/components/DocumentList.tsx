@@ -4,13 +4,13 @@ import type { Document, ViewMode, SortBy } from '../types';
 import { DocumentCard } from './DocumentCard';
 import {
   FileText,
-  Link2,
   ArrowUpDown,
   Clock,
   Quote,
   CheckSquare,
   Square,
-  Trash2,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +19,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,45 +44,56 @@ interface DocumentListProps {
   documents: Document[];
   viewMode: ViewMode;
   sortBy: SortBy;
+  currentPage: number;
+  pageSize: number;
+  total: number;
+  isLoading: boolean;
   onViewModeChange: (mode: ViewMode) => void;
   onSortChange: (sort: SortBy) => void;
-  onRetry: (id: string) => void;
+  onPageChange: (page: number) => void;
+  onPreview: (document: Document) => void;
   onDelete: (ids: string[]) => void;
-  onPreview?: (document: Document) => void;
+  onRefresh: () => void;
 }
 
 export function DocumentList({
   documents,
   viewMode,
   sortBy,
+  currentPage,
+  pageSize,
+  total,
+  isLoading,
   onViewModeChange,
   onSortChange,
-  onRetry,
-  onDelete,
+  onPageChange,
   onPreview,
+  onDelete,
+  onRefresh,
 }: DocumentListProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [docToDelete, setDocToDelete] = useState<string | null>(null);
-  const [showBatchDelete, setShowBatchDelete] = useState(false);
+
+  const totalPages = Math.ceil(total / pageSize);
 
   // 筛选和排序
   const filteredAndSortedDocs = useMemo(() => {
-    let filtered = documents;
+    let filtered = documents || [];
 
     if (viewMode === 'files') {
-      filtered = documents.filter((d) => d.type === 'file');
-    } else if (viewMode === 'links') {
-      filtered = documents.filter((d) => d.type === 'link');
+      // 这里可以根据需要添加文件类型过滤
+      filtered = documents.filter((d) => d.title.match(/\.(pdf|docx?|pptx?|xlsx?|txt|md)$/i));
     }
 
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'updated':
-          return 0; // 保持原有顺序（mock数据已排序）
+          return new Date(b.uploadTime).getTime() - new Date(a.uploadTime).getTime();
         case 'name':
-          return a.name.localeCompare(b.name);
+          return a.title.localeCompare(b.title);
         case 'citations':
-          return b.citations - a.citations;
+          // 暂时使用 chunkSize 作为排序依据，后续可以添加 citation 统计
+          return b.chunkSize - a.chunkSize;
         default:
           return 0;
       }
@@ -94,14 +114,8 @@ export function DocumentList({
     if (selectedIds.size === filteredAndSortedDocs.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredAndSortedDocs.map((d) => d.id)));
+      setSelectedIds(new Set(filteredAndSortedDocs.map((d) => d.docId)));
     }
-  };
-
-  const handleBatchDelete = () => {
-    onDelete(Array.from(selectedIds));
-    setSelectedIds(new Set());
-    setShowBatchDelete(false);
   };
 
   const handleSingleDelete = () => {
@@ -111,7 +125,43 @@ export function DocumentList({
     }
   };
 
-  if (documents.length === 0) {
+  // 生成分页页码
+  const getPaginationItems = () => {
+    const items: (number | string)[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          items.push(i);
+        }
+        items.push('ellipsis');
+        items.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        items.push(1);
+        items.push('ellipsis');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          items.push(i);
+        }
+      } else {
+        items.push(1);
+        items.push('ellipsis');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(i);
+        }
+        items.push('ellipsis');
+        items.push(totalPages);
+      }
+    }
+
+    return items;
+  };
+
+  if (documents.length === 0 && !isLoading) {
     return <EmptyState />;
   }
 
@@ -149,18 +199,6 @@ export function DocumentList({
               <FileText className="h-3.5 w-3.5" />
               文档
             </button>
-            <button
-              onClick={() => onViewModeChange('links')}
-              className={cn(
-                'px-3 py-1.5 text-sm rounded transition-colors flex items-center gap-1.5',
-                viewMode === 'links'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'hover:bg-accent'
-              )}
-            >
-              <Link2 className="h-3.5 w-3.5" />
-              链接
-            </button>
           </div>
 
           {/* 排序 */}
@@ -189,10 +227,26 @@ export function DocumentList({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* 刷新按钮 */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={onRefresh}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5" />
+            )}
+            刷新
+          </Button>
         </div>
 
         <div className="text-sm text-muted-foreground">
-          共 {filteredAndSortedDocs.length} 个项目
+          共 {total} 个文档
         </div>
       </div>
 
@@ -212,36 +266,70 @@ export function DocumentList({
               已选择 {selectedIds.size} 项
             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-destructive hover:text-destructive"
-              onClick={() => setShowBatchDelete(true)}
-            >
-              <Trash2 className="mr-1.5 h-4 w-4" />
-              删除
-            </Button>
-          </div>
         </div>
       )}
 
       {/* 文档列表 */}
       <div className="flex-1 overflow-y-auto py-2">
-        <div className="space-y-2">
-          {filteredAndSortedDocs.map((doc) => (
-            <DocumentCard
-              key={doc.id}
-              document={doc}
-              isSelected={selectedIds.has(doc.id)}
-              onSelect={handleSelect}
-              onRetry={onRetry}
-              onDelete={(id) => setDocToDelete(id)}
-              onPreview={onPreview}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredAndSortedDocs.map((doc) => (
+              <DocumentCard
+                key={doc.docId}
+                document={doc}
+                isSelected={selectedIds.has(doc.docId)}
+                onSelect={handleSelect}
+                onClick={onPreview}
+                onDelete={(id) => setDocToDelete(id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* 分页 */}
+      {!isLoading && (
+        <div className="py-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+
+              {getPaginationItems().map((item, index) =>
+                item === 'ellipsis' ? (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={item}>
+                    <PaginationLink
+                      onClick={() => onPageChange(item as number)}
+                      isActive={currentPage === item}
+                    >
+                      {item}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {/* 删除确认对话框 */}
       <AlertDialog open={!!docToDelete} onOpenChange={() => setDocToDelete(null)}>
@@ -256,29 +344,6 @@ export function DocumentList({
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleSingleDelete}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              删除
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* 批量删除确认 */}
-      <AlertDialog open={showBatchDelete} onOpenChange={setShowBatchDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
-            <AlertDialogDescription>
-              您确定要删除选中的 {selectedIds.size} 个文档吗？此操作不可恢复。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowBatchDelete(false)}>
-              取消
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBatchDelete}
               className="bg-destructive hover:bg-destructive/90"
             >
               删除
