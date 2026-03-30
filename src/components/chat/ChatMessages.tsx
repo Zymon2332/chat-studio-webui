@@ -45,7 +45,7 @@ export function ChatMessages({
               <AIMessage
                 key={message.id || index}
                 items={items}
-                isStreaming={isCurrentStreaming}
+                isStreaming={!!isCurrentStreaming}
               />
             );
           }
