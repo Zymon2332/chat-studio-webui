@@ -11,11 +11,36 @@ export const login = async (data: LoginRequest): Promise<LoginData> => {
 };
 
 /**
+ * 发送验证码
+ */
+export const sendVerificationCode = async (email: string): Promise<void> => {
+  const response = await api.get<ApiResponse<void>>('/auth/sendCode', {
+    params: { email }
+  });
+  handleResponse(response.data);
+};
+
+/**
  * 获取当前用户信息
  */
 export const getCurrentUser = async (): Promise<UserInfo> => {
   const response = await api.get<ApiResponse<UserInfo>>('/user/info');
   return handleResponse(response.data);
+};
+
+/**
+ * 用户注册
+ */
+export interface RegisterRequest {
+  email: string;
+  pwd: string;
+  captcha: string;
+  inviteCode?: string;
+}
+
+export const register = async (data: RegisterRequest): Promise<void> => {
+  const response = await api.post<ApiResponse<void>>('/auth/register', data);
+  handleResponse(response.data);
 };
 
 /**
