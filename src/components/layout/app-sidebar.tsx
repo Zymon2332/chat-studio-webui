@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, BookOpen, Wrench, Workflow, Settings, ChevronUp, LogOut, MoreVertical, Edit, Trash } from "lucide-react";
+import { Plus, BookOpen, Wrench, Workflow, Settings, ChevronUp, LogOut, MoreVertical, Edit, Trash, LayoutDashboard } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import logo from "@/assets/logo.svg";
 import { getSessionList, renameSession, deleteSessions } from "@/lib/session";
@@ -379,6 +379,13 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
               <Settings className="mr-2 h-4 w-4" />
               <span>设置</span>
             </DropdownMenuItem>
+
+            {user?.userRole === 'ADMIN' && (
+              <DropdownMenuItem onClick={() => navigate("/admin")}>
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                <span>后台管理</span>
+              </DropdownMenuItem>
+            )}
 
             <DropdownMenuSeparator />
 

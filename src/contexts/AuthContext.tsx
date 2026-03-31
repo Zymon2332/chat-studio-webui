@@ -6,7 +6,7 @@ interface AuthContextType {
   user: UserInfo | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: LoginRequest) => Promise<void>;
+  login: (data: LoginRequest) => Promise<UserInfo>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -22,11 +22,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /**
    * 登录
    */
-  const login = useCallback(async (data: LoginRequest) => {
+  const login = useCallback(async (data: LoginRequest): Promise<UserInfo> => {
     setIsLoading(true);
     try {
       const response = await loginApi(data);
       setUser(response.userInfo);
+      return response.userInfo;
     } finally {
       setIsLoading(false);
     }

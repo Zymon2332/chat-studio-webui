@@ -66,6 +66,7 @@ export const Login: React.FC = () => {
         password: loginPassword,
         rememberMe,
       });
+      // 所有用户统一跳转到首页
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败，请重试');
