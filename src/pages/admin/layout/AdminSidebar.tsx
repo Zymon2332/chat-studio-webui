@@ -32,11 +32,12 @@ import {
 import {
   LayoutDashboard,
   Users,
-  Bot,
   Database,
   Settings,
   ChevronUp,
   LogOut,
+  Building2,
+  Cpu,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -49,7 +50,8 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "数据看板", path: "/admin" },
   { icon: Users, label: "用户管理", path: "/admin/users" },
-  { icon: Bot, label: "模型管理", path: "/admin/models" },
+  { icon: Building2, label: "模型提供商管理", path: "/admin/suppliers" },
+  { icon: Cpu, label: "模型能力管理", path: "/admin/model-capabilities" },
   { icon: Database, label: "知识库管理", path: "/admin/knowledge" },
   { icon: Settings, label: "系统设置", path: "/admin/settings" },
 ];

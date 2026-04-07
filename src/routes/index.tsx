@@ -2,6 +2,9 @@ import type { RouteObject } from "react-router-dom";
 import { ProtectedRoute, AdminRoute } from "@/components/guards/ProtectedRoute";
 import { Login } from "@/pages/Login";
 import { AdminLayout, Dashboard } from "@/pages/admin";
+import { UserManagement } from "@/pages/admin/users/UserManagement";
+import { SupplierManagement } from "@/pages/admin/suppliers/SupplierManagement";
+import { ModelCapabilityManagement } from "@/pages/admin/modelCapabilities/ModelCapabilityManagement";
 import { mainRoutes } from "./chat";
 
 export const routes: RouteObject[] = [
@@ -28,11 +31,19 @@ export const routes: RouteObject[] = [
       },
       {
         path: "users",
-        element: <div className="p-8 text-center">用户管理页面开发中...</div>,
+        element: <UserManagement />,
+      },
+      {
+        path: "suppliers",
+        element: <SupplierManagement />,
       },
       {
         path: "models",
         element: <div className="p-8 text-center">模型管理页面开发中...</div>,
+      },
+      {
+        path: "model-capabilities",
+        element: <ModelCapabilityManagement />,
       },
       {
         path: "knowledge",
