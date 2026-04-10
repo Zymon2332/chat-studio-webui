@@ -1,12 +1,22 @@
 # 多阶段构建 - 构建时配置方案
 # 使用方式：
-#   1. 构建并运行容器：
-#      make build API_URL=https://api.example.com
+#   1. 使用 Nginx 反向代理（推荐，适合容器化部署）：
+#      make build                              # 默认使用 /api 路径
+#      docker run -d --network your-network -p 3000:3000 chat-studio-web-ui
+#      # 后端容器需要在同一网络，名为 chat-studio-server
+#   
+#   2. 直接指定后端地址（适合开发或外部后端）：
+#      make build API_URL=http://localhost:8080
 #      docker run -d -p 3000:3000 chat-studio-web-ui
 #   
-#   2. 提取静态文件用于外部部署：
+#   3. 提取静态文件用于外部部署：
 #      make extract
 #      cp -r dist/* /var/www/html/
+#
+# 反向代理说明：
+#   - 前端请求 /api/* 会被 Nginx 转发到 http://chat-studio-server:8080
+#   - 容器名 chat-studio-server 只在 Docker 网络内部可解析
+#   - 浏览器只访问 http://localhost:3000，不涉及容器通信
 
 # 阶段 1: 构建阶段
 FROM node:22-alpine3.21 AS builder
@@ -28,8 +38,9 @@ RUN npm install -g pnpm && \
 COPY . .
 
 # 构建应用（构建时注入 API 地址）
+# 默认使用 /api，由 Nginx 反向代理到后端容器
 ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080}
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL:-/api}
 RUN pnpm build
 
 # 阶段 2: 运行阶段 - Nginx 托管

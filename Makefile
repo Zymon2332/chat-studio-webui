@@ -2,10 +2,12 @@
 
 # 变量
 IMAGE_NAME ?= chat-studio-web-ui
-VERSION ?= latest
+VERSION ?= preview
 REGISTRY ?=
 FULL_IMAGE_NAME = $(REGISTRY)$(IMAGE_NAME)
-API_URL ?= http://192.168.139.3:8080
+# 默认使用相对路径 /api，Nginx 会代理到后端容器
+# 如需直接访问后端，可设置为 http://localhost:8080 或其他地址
+API_URL ?= /api
 
 # 颜色定义
 BLUE := \033[36m
@@ -19,8 +21,8 @@ help:
 	@echo "$(BLUE)Chat Studio Web UI - Docker 构建工具$(NC)"
 	@echo ""
 	@echo "$(GREEN)可用命令:$(NC)"
-	@echo "  $(YELLOW)make build$(NC)                  构建 Docker 镜像"
-	@echo "  $(YELLOW)make build API_URL=xxx$(NC)      指定后端地址构建"
+	@echo "  $(YELLOW)make build$(NC)                  构建 Docker 镜像（使用 /api 代理）"
+	@echo "  $(YELLOW)make build API_URL=xxx$(NC)      指定后端地址构建（如 http://localhost:8080）"
 	@echo "  $(YELLOW)make run$(NC)                    运行容器"
 	@echo "  $(YELLOW)make extract$(NC)                提取静态文件"
 	@echo "  $(YELLOW)make stop$(NC)                   停止容器"
@@ -28,12 +30,12 @@ help:
 	@echo "  $(YELLOW)make clean$(NC)                  清理资源"
 	@echo ""
 	@echo "$(GREEN)环境变量:$(NC)"
-	@echo "  $(YELLOW)API_URL$(NC)       后端 API 地址"
+	@echo "  $(YELLOW)API_URL$(NC)       后端 API 地址（默认: /api，使用 Nginx 代理）"
 	@echo ""
 	@echo "$(GREEN)示例:$(NC)"
-	@echo "  make build API_URL=https://api.com   # 构建"
-	@echo "  make run                             # 运行容器"
-	@echo "  make extract                         # 提取静态文件到外部部署"
+	@echo "  make build                                    # 使用 Nginx 反向代理模式"
+	@echo "  make build API_URL=http://localhost:8080      # 直接访问本地后端（开发模式）"
+	@echo "  make extract                                  # 提取静态文件到外部部署"
 
 # 构建镜像
 build:
