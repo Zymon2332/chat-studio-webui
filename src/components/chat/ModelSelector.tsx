@@ -40,6 +40,7 @@ interface ModelSelectorProps {
 
 // 渲染能力图标
 const renderAbilityIcons = (abilities: string) => {
+  if (!abilities) return null;
   const abilityList = abilities.split(",").filter(Boolean);
   
   return (
