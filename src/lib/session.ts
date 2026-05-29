@@ -27,3 +27,13 @@ export const createSession = async (): Promise<string> => {
   const response = await api.post<ApiResponse<string>>('/session/create');
   return handleResponse(response.data);
 };
+
+export const getSessionTokenUsage = async (sessionId: string): Promise<number> => {
+  const response = await api.get<ApiResponse<number>>(`/session/tokenUsage/${sessionId}`);
+  return handleResponse(response.data);
+};
+
+export const getTokenContextWindow = async (): Promise<number> => {
+  const response = await api.get<ApiResponse<number>>('/session/tokenContextWindow');
+  return handleResponse(response.data);
+};

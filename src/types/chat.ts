@@ -21,13 +21,6 @@ export interface UserMessage {
   attributes: Record<string, any>;  // 包含 dateTime 等字段
 }
 
-// AI 消息 - 新格式
-export interface AIMessage {
-  messageType: "AI";
-  contents: ApiAIContent[];
-  id?: string;  // 可选：用于流式占位消息标识
-}
-
 // 流式内容项 - 用于渲染
 export interface StreamingItem {
   id: string;
@@ -49,6 +42,14 @@ export interface StreamingItem {
 export interface StreamingContent {
   items: StreamingItem[];
   currentIndex: number;
+}
+
+// AI 消息 - 新格式
+export interface AIMessage {
+  messageType: "AI";
+  contents: ApiAIContent[];
+  id?: string;  // 可选：用于流式占位消息标识
+  _streamingContent?: StreamingContent;
 }
 
 export type Message = 

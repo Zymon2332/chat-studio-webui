@@ -3,6 +3,17 @@ import { useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ChatInput, type ChatInputRef } from "@/components/chat/ChatInput";
 import { ChatMessages } from "@/components/chat/ChatMessages";
+import {
+  Context,
+  ContextTrigger,
+  ContextContent,
+  ContextContentHeader,
+  ContextContentBody,
+  ContextInputUsage,
+  ContextOutputUsage,
+  ContextReasoningUsage,
+  ContextCacheUsage,
+} from "@/components/ai-elements/context";
 import { getSessionMessages } from "@/lib/session";
 import { useChat } from "@/hooks/useChat";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -86,7 +97,7 @@ export function Conversation() {
   const loadingStartTimeRef = useRef<number>(0);
   const MIN_LOADING_DISPLAY_TIME = 300; // 最小显示时间 300ms
 
-  const { messages, streamingContent, isStreaming, currentAIMessageId, sendMessage, cancelStream } = useChat(id || "");
+  const { messages, isStreaming, sendMessage, cancelStream, usedTokens, maxTokens } = useChat(id || "");
 
   // 加载历史消息
   useEffect(() => {
@@ -153,6 +164,8 @@ export function Conversation() {
   // 合并历史消息和当前对话消息
   const displayMessages: Message[] = [...historyMessages, ...messages];
 
+  const modelId = initialModel?.modelName;
+
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
       {/* 消息列表 */}
@@ -170,25 +183,38 @@ export function Conversation() {
       ) : (
         <ChatMessages
           messages={displayMessages}
-          streamingContent={streamingContent}
-          isStreaming={isStreaming}
-          currentAIMessageId={currentAIMessageId}
         />
       )}
 
       {/* 底部输入框 - 固定不滚动 */}
-      <div className="flex-shrink-0 bg-background">
-        <div className="max-w-4xl mx-auto px-4 pb-4 pt-0">
-          <ChatInput
-            ref={chatInputRef}
-            onSend={handleSend}
-            onCancel={cancelStream}
-            isStreaming={isStreaming}
-            placeholder="输入消息..."
-            variant="compact"
-          />
+      <Context
+        usedTokens={usedTokens}
+        maxTokens={maxTokens}
+        modelId={modelId}
+      >
+        <div className="flex-shrink-0 bg-background">
+          <div className="max-w-4xl mx-auto px-4 pb-4 pt-0">
+            <ChatInput
+              ref={chatInputRef}
+              onSend={handleSend}
+              onCancel={cancelStream}
+              isStreaming={isStreaming}
+              placeholder="输入消息..."
+              variant="compact"
+              footerExtra={<ContextTrigger />}
+            />
+          </div>
         </div>
-      </div>
+        <ContextContent>
+          <ContextContentHeader />
+          <ContextContentBody>
+            <ContextInputUsage />
+            <ContextOutputUsage />
+            <ContextReasoningUsage />
+            <ContextCacheUsage />
+          </ContextContentBody>
+        </ContextContent>
+      </Context>
     </div>
   );
 }

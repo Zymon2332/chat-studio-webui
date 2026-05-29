@@ -3,6 +3,7 @@ export interface ParseResult {
   content: string;
   isEnd?: boolean;  // 标记 think 是否结束（收到 [END] 时为 true）
   data?: any; // 用于 tool 和 result 的 JSON 数据
+  sourceType?: string;
 }
 
 export class StreamParser {

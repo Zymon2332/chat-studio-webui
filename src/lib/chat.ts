@@ -8,6 +8,7 @@ interface ChatStreamParams {
   onChunk: (result: ParseResult) => void;
   onComplete: () => void;
   onError: (error: Error) => void;
+  onEvent: (eventType: string) => void;
 }
 
 export function chatStream({
@@ -18,6 +19,7 @@ export function chatStream({
   onChunk,
   onComplete,
   onError,
+  onEvent,
 }: ChatStreamParams): () => void {
   const parser = new StreamParser();
   const controller = new AbortController();
@@ -41,11 +43,17 @@ export function chatStream({
 
         try {
           const data = JSON.parse(jsonStr);
+          const type = data.type;
           const content = data.content;
+
+          if (type) {
+            onEvent(type);
+          }
 
           if (content) {
             const result = parser.parse(content);
             if (result) {
+              if (type) result.sourceType = type;
               onChunk(result);
             }
           }

@@ -13,7 +13,7 @@ import {
   PromptInputActionAddAttachments,
 } from "@/components/ai-elements/prompt-input";
 import { ModelSelector, type ModelSelectorRef } from "./ModelSelector";
-import { AtSign, Wrench } from "lucide-react";
+import { AtSign } from "lucide-react";
 import type { Model } from "@/lib/models";
 
 export interface ChatInputRef {
@@ -27,6 +27,7 @@ interface ChatInputProps {
   placeholder?: string;
   className?: string;
   variant?: "default" | "compact";
+  footerExtra?: React.ReactNode;
 }
 
 export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
@@ -38,6 +39,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       placeholder = "给我发消息或布置任务",
       className,
       variant = "default",
+      footerExtra,
     },
     ref
   ) => {
@@ -83,19 +85,18 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               <AtSign className="size-4" />
             </PromptInputButton>
             
-            <PromptInputButton tooltip={{ content: "选择工具" }}>
-              <Wrench className="size-4" />
-            </PromptInputButton>
-            
             {/* 模型选择器 */}
             <ModelSelector ref={modelSelectorRef} />
           </PromptInputTools>
           
-          {/* 右侧提交/停止按钮 */}
-          <PromptInputSubmit 
-            status={status}
-            onStop={onCancel}
-          />
+          {/* 右侧操作区 */}
+          <div className="flex items-center gap-2">
+            {footerExtra}
+            <PromptInputSubmit 
+              status={status}
+              onStop={onCancel}
+            />
+          </div>
         </PromptInputFooter>
       </PromptInput>
     );

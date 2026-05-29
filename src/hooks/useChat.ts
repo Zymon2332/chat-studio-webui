@@ -1,275 +1,313 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { chatStream } from "@/lib/chat";
-import { generateId } from "@/lib/chatParser";
+import { generateId, type ParseResult } from "@/lib/chatParser";
+import { getSessionTokenUsage, getTokenContextWindow } from "@/lib/session";
 import type { Model } from "@/lib/models";
 import type { Message, AIMessage, StreamingContent, StreamingItem } from "@/types/chat";
 
+interface StreamEntry {
+  streamingContent: StreamingContent;
+  messageId: string | null;
+}
+
+const emptyEntry: StreamEntry = {
+  streamingContent: { items: [], currentIndex: -1 },
+  messageId: null,
+};
+
+function convertItemsToContents(items: StreamingItem[]): AIMessage["contents"] {
+  const contents: AIMessage["contents"] = [];
+  for (const item of items) {
+    if (item.type === "think") {
+      contents.push({ text: "", thinking: item.content, executedTools: [], attributes: {} });
+    } else if (item.type === "text") {
+      contents.push({ text: item.content, thinking: "", executedTools: [], attributes: {} });
+    } else if (item.type === "tool" && item.data) {
+      contents.push({
+        text: "",
+        thinking: "",
+        executedTools: [{
+          toolName: item.data.name || "工具",
+          toolArguments: item.data.argument || "{}",
+          toolResult: item.data.response?.text || "",
+          isError: item.data.response?.isError || false,
+        }],
+        attributes: {},
+      });
+    }
+  }
+  return contents;
+}
+
+function computeStreamContent(prev: StreamingContent, result: ParseResult): StreamingContent {
+  const { type, content, data, isEnd } = result;
+
+  if (type === "think" && isEnd) {
+    const newItems = [...prev.items];
+    for (let i = newItems.length - 1; i >= 0; i--) {
+      if (newItems[i].type === "think") {
+        newItems[i] = { ...newItems[i], isComplete: true };
+        break;
+      }
+    }
+    return { ...prev, items: newItems };
+  }
+
+  if (type === "result" && data) {
+    const newItems = [...prev.items];
+    for (let i = newItems.length - 1; i >= 0; i--) {
+      if (newItems[i].type === "tool" && newItems[i].data?.id === data.id) {
+        newItems[i] = {
+          ...newItems[i],
+          data: { ...newItems[i].data, response: { text: data.text, isError: data.isError } },
+        };
+        break;
+      }
+    }
+    return { ...prev, items: newItems };
+  }
+
+  const lastItem = prev.items[prev.currentIndex];
+  if (lastItem && lastItem.type === type && type !== "tool") {
+    const newItems = [...prev.items];
+    newItems[prev.currentIndex] = { ...lastItem, content: lastItem.content + content };
+    return { ...prev, items: newItems };
+  }
+
+  const newItem: StreamingItem = {
+    id: generateId(),
+    type: type as "think" | "text" | "tool",
+    content,
+    data,
+  };
+  return { items: [...prev.items, newItem], currentIndex: prev.items.length };
+}
+
 export function useChat(sessionId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [streamingContent, setStreamingContent] = useState<StreamingContent>({
-    items: [],
-    currentIndex: -1,
-  });
-  const streamingContentRef = useRef<StreamingContent>({ items: [], currentIndex: -1 });
+  const [streamEntries, setStreamEntries] = useState<Record<string, StreamEntry>>({});
+  const streamEntriesRef = useRef<Record<string, StreamEntry>>({});
   const [isStreaming, setIsStreaming] = useState(false);
+  const [tokenUsage, setTokenUsage] = useState({ usedTokens: 0, maxTokens: 128000 });
   const cancelRef = useRef<(() => void) | null>(null);
   const messagesRef = useRef<Message[]>([]);
   const prevSessionIdRef = useRef<string>(sessionId);
-  const currentAIMessageIdRef = useRef<string | null>(null);
+  const summarizingNotifiedRef = useRef(false);
+  const onEventHandlersRef = useRef<Record<string, () => void>>({});
 
-  // 同步 ref 和 state
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
   useEffect(() => {
-    streamingContentRef.current = streamingContent;
-  }, [streamingContent]);
+    streamEntriesRef.current = streamEntries;
+  }, [streamEntries]);
 
-  // 会话切换时重置状态
   useEffect(() => {
     if (prevSessionIdRef.current !== sessionId) {
       prevSessionIdRef.current = sessionId;
-      // 清理之前的流
       if (cancelRef.current) {
         cancelRef.current();
         cancelRef.current = null;
       }
-      // 重置所有状态
       setMessages([]);
       messagesRef.current = [];
-      setStreamingContent({ items: [], currentIndex: -1 });
-      streamingContentRef.current = { items: [], currentIndex: -1 };
+      setStreamEntries({});
+      streamEntriesRef.current = {};
       setIsStreaming(false);
+      summarizingNotifiedRef.current = false;
     }
   }, [sessionId]);
 
-  // 保存流式内容到 messages（新格式：StreamingItem[] → contents: ApiAIContent[]）
-  // 保存流式内容到 messages
-  // 更新占位 AI 消息的 contents，保持流式时的渲染顺序
-  const saveStreamingContent = useCallback(() => {
-    const finalContent = streamingContentRef.current;
-    const currentId = currentAIMessageIdRef.current;
-    
-    if (finalContent.items.length > 0 && currentId) {
-      const contents: AIMessage["contents"] = [];
+  useEffect(() => {
+    if (!sessionId) return;
 
-      // 按 items 顺序创建 contents，每个 item 对应一个 content
-      finalContent.items.forEach((item: StreamingItem) => {
-        if (item.type === 'think') {
-          contents.push({
-            text: "",
-            thinking: item.content,
-            executedTools: [],
-            attributes: {},
-          });
-        } else if (item.type === 'text') {
-          contents.push({
-            text: item.content,
-            thinking: "",
-            executedTools: [],
-            attributes: {},
-          });
-        } else if (item.type === 'tool' && item.data) {
-          contents.push({
-            text: "",
-            thinking: "",
-            executedTools: [{
-              toolName: item.data.name || "工具",
-              toolArguments: item.data.argument || "{}",
-              toolResult: item.data.response?.text || "",
-              isError: item.data.response?.isError || false,
-            }],
-            attributes: {},
-          });
-        }
-      });
+    Promise.all([
+      getSessionTokenUsage(sessionId),
+      getTokenContextWindow(),
+    ]).then(([used, max]) => {
+      setTokenUsage({ usedTokens: used, maxTokens: max });
+    }).catch(() => {});
+  }, [sessionId]);
 
-      // 更新占位 AI 消息
-      const finalMessages = messagesRef.current.map((msg) => {
-        if (msg.messageType === "AI" && (msg as any).id === currentId) {
-          return {
-            ...msg,
-            contents,
-          };
-        }
-        return msg;
-      });
-      
-      messagesRef.current = finalMessages;
-      setMessages(finalMessages);
-      currentAIMessageIdRef.current = null;
-    }
+  function initStream(key: string, messageId?: string) {
+    const entry: StreamEntry = {
+      streamingContent: { items: [], currentIndex: -1 },
+      messageId: messageId ?? null,
+    };
+    setStreamEntries(prev => ({ ...prev, [key]: entry }));
+    streamEntriesRef.current = { ...streamEntriesRef.current, [key]: entry };
+  }
+
+  function updateStream(key: string, result: ParseResult) {
+    setStreamEntries(prev => {
+      const entry = prev[key];
+      if (!entry) return prev;
+      const newContent = computeStreamContent(entry.streamingContent, result);
+      const updated = { ...prev, [key]: { ...entry, streamingContent: newContent } };
+      streamEntriesRef.current = updated;
+      return updated;
+    });
+  }
+
+  function saveStream(key: string) {
+    const entry = streamEntriesRef.current[key];
+    if (!entry || !entry.messageId || entry.streamingContent.items.length === 0) return;
+
+    const contents = convertItemsToContents(entry.streamingContent.items);
+    const finalMessages = messagesRef.current.map(msg => {
+      if (msg.messageType === "AI" && (msg as any).id === entry.messageId) {
+        return { ...msg, contents };
+      }
+      return msg;
+    });
+    messagesRef.current = finalMessages;
+    setMessages(finalMessages);
+  }
+
+  function clearStream(key: string) {
+    setStreamEntries(prev => {
+      if (!prev[key]) return prev;
+      const updated = { ...prev, [key]: { ...emptyEntry } };
+      streamEntriesRef.current = updated;
+      return updated;
+    });
+  }
+
+  const handleEvent = useCallback((eventType: string) => {
+    const handler = onEventHandlersRef.current[eventType];
+    if (handler) handler();
   }, []);
 
   const sendMessage = useCallback(
     async (prompt: string, model: Model) => {
       if (isStreaming) return;
 
-      // 添加用户消息
+      summarizingNotifiedRef.current = false;
+
       const userMessage: Message = {
         contents: [{ contentType: "TEXT", text: prompt }],
         messageType: "USER",
         attributes: {},
       };
 
-      // 创建占位 AI 消息（用于合并渲染）
       const aiMessageId = generateId();
-      currentAIMessageIdRef.current = aiMessageId;
-      
       const aiPlaceholderMessage: Message = {
         messageType: "AI",
         contents: [],
         id: aiMessageId,
       } as Message;
-      
+
       const newMessages = [...messagesRef.current, userMessage, aiPlaceholderMessage];
       messagesRef.current = newMessages;
       setMessages(newMessages);
 
-      // 初始化流式状态
-      setStreamingContent({ items: [], currentIndex: -1 });
-      streamingContentRef.current = { items: [], currentIndex: -1 };
+      initStream("REPLY", aiMessageId);
       setIsStreaming(true);
 
-      // 开始流式对话
+      // Register event handlers for this round
+      onEventHandlersRef.current = {
+        SUMMARY_COMPRESS: () => {
+          if (!summarizingNotifiedRef.current) {
+            summarizingNotifiedRef.current = true;
+            const summaryId = generateId();
+            const statusMsg: Message = {
+              contents: [{ contentType: "TEXT", text: "正在压缩会话上下文，请稍后..." }],
+              messageType: "USER",
+              attributes: {},
+            };
+            const summaryPlaceholder: Message = {
+              messageType: "AI",
+              contents: [],
+              id: summaryId,
+            } as Message;
+            const current = messagesRef.current;
+            const updated = [...current, statusMsg, summaryPlaceholder];
+            messagesRef.current = updated;
+            setMessages(updated);
+            initStream("SUMMARY_COMPRESS", summaryId);
+          }
+        },
+      };
+
       const cancel = chatStream({
         prompt,
         sessionId,
         providerId: model.providerId,
         modelName: model.modelName,
         onChunk: (result) => {
-          setStreamingContent((prev) => {
-            const { type, content, data, isEnd } = result;
-
-            // 处理 think 结束标记 - 标记最后一个 think item 为完成
-            if (type === 'think' && isEnd) {
-              const newItems = [...prev.items];
-              // 找到最后一个 think item 并标记为完成
-              for (let i = newItems.length - 1; i >= 0; i--) {
-                if (newItems[i].type === 'think') {
-                  newItems[i] = {
-                    ...newItems[i],
-                    isComplete: true,
-                  };
-                  break;
-                }
-              }
-              // 更新 ref
-              const newContent = { ...prev, items: newItems };
-              streamingContentRef.current = newContent;
-              return newContent;
-            }
-
-            // 处理 result 类型 - 更新最后一个 tool 的 response
-            if (type === 'result' && data) {
-              const newItems = [...prev.items];
-              // 找到对应的 tool item 并更新 response
-              for (let i = newItems.length - 1; i >= 0; i--) {
-                if (newItems[i].type === 'tool' && newItems[i].data?.id === data.id) {
-                  newItems[i] = {
-                    ...newItems[i],
-                    data: {
-                      ...newItems[i].data,
-                      response: {
-                        text: data.text,
-                        isError: data.isError,
-                      },
-                    },
-                  };
-                  break;
-                }
-              }
-              // 更新 ref
-              const newContent = { ...prev, items: newItems };
-              streamingContentRef.current = newContent;
-              return newContent;
-            }
-
-            // 获取当前最后一个 item
-            const lastItem = prev.items[prev.currentIndex];
-
-            let newContent: StreamingContent;
-            if (lastItem && lastItem.type === type && type !== 'tool') {
-              // 同类型（非 tool），追加到现有 item
-              const newItems = [...prev.items];
-              newItems[prev.currentIndex] = {
-                ...lastItem,
-                content: lastItem.content + content,
-              };
-              newContent = { ...prev, items: newItems };
-            } else {
-              // 不同类型 或 是 tool，创建新 item
-              const newItem: StreamingItem = {
-                id: generateId(),
-                type: type as 'think' | 'text' | 'tool',
-                content,
-                data,
-              };
-              newContent = {
-                items: [...prev.items, newItem],
-                currentIndex: prev.items.length,
-              };
-            }
-
-            // 更新 ref
-            streamingContentRef.current = newContent;
-            return newContent;
-          });
+          const streamKey = result.sourceType || "REPLY";
+          const entry = streamEntriesRef.current[streamKey];
+          if (!entry) return;
+          updateStream(streamKey, result);
         },
+        onEvent: handleEvent,
         onComplete: () => {
-          // 1. 保存到 messages
-          saveStreamingContent();
-          
-          // 2. 立即清空流式（避免重复显示）
-          setStreamingContent({ items: [], currentIndex: -1 });
-          streamingContentRef.current = { items: [], currentIndex: -1 };
-          
-          // 3. 标记流式结束
+          saveStream("SUMMARY_COMPRESS");
+          saveStream("REPLY");
+          clearStream("REPLY");
+          clearStream("SUMMARY_COMPRESS");
           setIsStreaming(false);
+          summarizingNotifiedRef.current = false;
+          onEventHandlersRef.current = {};
           cancelRef.current = null;
+
+          Promise.all([
+            getSessionTokenUsage(sessionId),
+            getTokenContextWindow(),
+          ]).then(([used, max]) => {
+            setTokenUsage({ usedTokens: used, maxTokens: max });
+          }).catch(() => {});
         },
         onError: () => {
-          // 1. 保存到 messages（即使出错也保存已接收的内容）
-          saveStreamingContent();
-          
-          // 2. 立即清空流式
-          setStreamingContent({ items: [], currentIndex: -1 });
-          streamingContentRef.current = { items: [], currentIndex: -1 };
-          
-          // 3. 标记流式结束
+          saveStream("SUMMARY_COMPRESS");
+          saveStream("REPLY");
+          clearStream("REPLY");
+          clearStream("SUMMARY_COMPRESS");
           setIsStreaming(false);
+          summarizingNotifiedRef.current = false;
+          onEventHandlersRef.current = {};
           cancelRef.current = null;
         },
       });
 
       cancelRef.current = cancel;
     },
-    [sessionId, isStreaming, saveStreamingContent]
+    [sessionId, isStreaming, handleEvent]
   );
 
   const cancelStream = useCallback(() => {
     if (cancelRef.current) {
       cancelRef.current();
       cancelRef.current = null;
-      
-      // 保存已接收的内容
-      saveStreamingContent();
-      
-      // 清空流式
-      setStreamingContent({ items: [], currentIndex: -1 });
-      streamingContentRef.current = { items: [], currentIndex: -1 };
-      
+
+saveStream("SUMMARY_COMPRESS");
+          saveStream("REPLY");
+          clearStream("REPLY");
+      clearStream("SUMMARY_COMPRESS");
       setIsStreaming(false);
+      summarizingNotifiedRef.current = false;
+      onEventHandlersRef.current = {};
     }
-  }, [saveStreamingContent]);
+  }, []);
+
+  const enrichedMessages: Message[] = messages.map(msg => {
+    if (msg.messageType === "AI" && (msg as any).id) {
+      const stream = Object.entries(streamEntries)
+        .find(([, e]) => e.messageId === (msg as any).id)?.[1];
+      if (stream) {
+        return { ...msg, _streamingContent: stream.streamingContent };
+      }
+    }
+    return msg;
+  });
 
   return {
-    messages,
-    streamingContent,
+    messages: enrichedMessages,
     isStreaming,
-    currentAIMessageId: currentAIMessageIdRef.current,
     sendMessage,
     cancelStream,
+    usedTokens: tokenUsage.usedTokens,
+    maxTokens: tokenUsage.maxTokens,
   };
 }
