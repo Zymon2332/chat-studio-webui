@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, BookOpen, Wrench, Workflow, Settings, ChevronUp, LogOut, MoreVertical, Edit, Trash, LayoutDashboard } from "lucide-react";
+import { Plus, BookOpen, Wrench, Settings, ChevronUp, LogOut, MoreVertical, Edit, Trash, LayoutDashboard } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import logo from "@/assets/logo.svg";
 import { getSessionList, renameSession, deleteSessions } from "@/lib/session";
@@ -239,20 +239,6 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
                   <div className="flex items-center gap-2 cursor-pointer">
                     <Wrench className="h-4 w-4" />
                     <span>工具与技能</span>
-                  </div>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  asChild 
-                  isActive={isActive("/workflows")}
-                  onClick={() => handleNavigate("/workflows")}
-                  tooltip="工作流"
-                >
-                  <div className="flex items-center gap-2 cursor-pointer">
-                    <Workflow className="h-4 w-4" />
-                    <span>工作流</span>
                   </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>

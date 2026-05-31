@@ -60,25 +60,10 @@ export const toolRoutes: RouteObject[] = [
   },
 ];
 
-export const workflowRoutes: RouteObject[] = [
-  {
-    path: "/workflows",
-    element: (
-      <ProtectedMainLayout>
-        <div className="p-8">
-          <h1 className="text-2xl font-bold">工作流</h1>
-          <p className="text-muted-foreground mt-2">工作流功能开发中...</p>
-        </div>
-      </ProtectedMainLayout>
-    ),
-  },
-];
-
 export const mainRoutes: RouteObject[] = [
   ...chatRoutes,
   ...conversationRoutes,
   ...knowledgeRoutes,
   ...toolRoutes,
-  ...workflowRoutes,
   ...settingsRoutes,
 ];
