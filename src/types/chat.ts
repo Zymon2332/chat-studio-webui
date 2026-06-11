@@ -50,6 +50,7 @@ export interface AIMessage {
   contents: ApiAIContent[];
   id?: string;  // 可选：用于流式占位消息标识
   _streamingContent?: StreamingContent;
+  _completedItems?: StreamingItem[];  // streaming 结束后保留的最终 items，保持原始 ID 避免 DOM 重建
 }
 
 export type Message = 

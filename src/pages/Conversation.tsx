@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ChatInput, type ChatInputRef } from "@/components/chat/ChatInput";
@@ -162,7 +162,10 @@ export function Conversation() {
   };
 
   // 合并历史消息和当前对话消息
-  const displayMessages: Message[] = [...historyMessages, ...messages];
+  const displayMessages: Message[] = useMemo(
+    () => [...historyMessages, ...messages],
+    [historyMessages, messages]
+  );
 
   const modelId = initialModel?.modelName;
 

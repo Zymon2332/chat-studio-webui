@@ -22,17 +22,23 @@ export function ChatMessages({
         {messages.map((message, index) => {
           if (isUserMessage(message)) {
             const dateTime = message.attributes?.dateTime || "";
-            return <UserChatMessage key={index} message={message} dateTime={dateTime} />;
+            return (
+              <UserChatMessage
+                key={`user-${message.contents[0]?.text?.slice(0, 32)}-${index}`}
+                message={message}
+                dateTime={dateTime}
+              />
+            );
           }
           if (isAIMessage(message)) {
             const isStreaming = !!message._streamingContent;
-            const items = isStreaming && message._streamingContent!.items.length > 0
+            const items = isStreaming
               ? message._streamingContent!.items
-              : convertApiContentToItems(message.contents);
+              : message._completedItems ?? convertApiContentToItems(message.contents);
 
             return (
               <AIMessage
-                key={message.id || index}
+                key={message.id || `ai-${index}`}
                 items={items}
                 isStreaming={isStreaming}
               />

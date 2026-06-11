@@ -157,7 +157,7 @@ export function useChat(sessionId: string) {
     const contents = convertItemsToContents(entry.streamingContent.items);
     const finalMessages = messagesRef.current.map(msg => {
       if (msg.messageType === "AI" && (msg as any).id === entry.messageId) {
-        return { ...msg, contents };
+        return { ...msg, contents, _completedItems: entry.streamingContent.items };
       }
       return msg;
     });
