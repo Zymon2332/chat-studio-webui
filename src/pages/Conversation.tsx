@@ -79,18 +79,10 @@ export function Conversation() {
   const location = useLocation();
   const chatInputRef = useRef<ChatInputRef>(null);
   
-  const [initialModel] = useState<Model | null>(() => {
-    const state = location.state as { model?: Model; initialMessage?: string; isNewSession?: boolean } | null;
-    return state?.model || null;
-  });
-  const [initialMessage] = useState<string | null>(() => {
-    const state = location.state as { model?: Model; initialMessage?: string; isNewSession?: boolean } | null;
-    return state?.initialMessage || null;
-  });
-  const [isNewSession] = useState<boolean>(() => {
-    const state = location.state as { model?: Model; initialMessage?: string; isNewSession?: boolean } | null;
-    return state?.isNewSession || false;
-  });
+  const locationState = location.state as { model?: Model; initialMessage?: string; isNewSession?: boolean } | null;
+  const initialModel = locationState?.model ?? null;
+  const initialMessage = locationState?.initialMessage ?? null;
+  const isNewSession = locationState?.isNewSession ?? false;
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const initialMessageSent = useRef(false);
