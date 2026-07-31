@@ -21,11 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertTriangle, PenLine } from "lucide-react";
+import { useState } from "react";
 import type { ModelProvider } from "@/lib/models";
 import type { DictItem } from "@/lib/common";
 
 interface AddModelForm {
   modelName: string;
+  contextLength: number;
   abilities: string[];
   useDefaultConfig: boolean;
   setting: {
@@ -134,6 +136,15 @@ export function AddModelDrawer({
                   </Button>
                 </div>
               )}
+            </div>
+
+            {/* 上下文长度 */}
+            <div className="space-y-2">
+              <Label>上下文长度</Label>
+              <ContextLengthInput
+                value={form.contextLength}
+                onChange={(val) => onFormChange({ ...form, contextLength: val })}
+              />
             </div>
 
             {/* 能力选择 */}
@@ -310,6 +321,68 @@ export function AddModelDrawer({
         </div>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+// ── 上下文长度选择组件 ──
+
+const CTX_PRESETS = [
+  { label: "未设置", value: 0 },
+  { label: "32K (32768)", value: 32768 },
+  { label: "64K (65536)", value: 65536 },
+  { label: "128K (128000)", value: 128000 },
+  { label: "256K (262144)", value: 262144 },
+  { label: "1M (1048576)", value: 1048576 },
+] as const;
+
+const isPresetValue = (v: number) => CTX_PRESETS.some((p) => p.value === v);
+
+function ContextLengthInput({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const [isCustom, setIsCustom] = useState(() => value > 0 && !isPresetValue(value));
+
+  return (
+    <div className="space-y-2">
+      <Select
+        value={isCustom ? "__custom__" : String(value)}
+        onValueChange={(v) => {
+          if (v === "__custom__") {
+            setIsCustom(true);
+            onChange(0);
+          } else {
+            setIsCustom(false);
+            onChange(Number(v));
+          }
+        }}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="选择上下文长度" />
+        </SelectTrigger>
+        <SelectContent>
+          {CTX_PRESETS.map((preset) => (
+            <SelectItem key={preset.value} value={String(preset.value)}>
+              {preset.label}
+            </SelectItem>
+          ))}
+          <SelectItem value="__custom__">自定义</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {isCustom && (
+        <Input
+          type="number"
+          min={1}
+          placeholder="输入上下文长度"
+          value={value || ""}
+          onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+        />
+      )}
+    </div>
   );
 }
 

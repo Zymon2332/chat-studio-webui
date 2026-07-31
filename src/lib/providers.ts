@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import api, { handleResponse } from './api';
 import type { ApiResponse } from '@/types/api';
 
@@ -65,9 +66,8 @@ export const installProvider = async (params: InstallProviderRequest): Promise<v
  * 卸载提供商
  * @param providerId 提供商ID
  */
-export const uninstallProvider = async (providerId: string): Promise<void> => {
-  // TODO: 等后端接口确定后实现
-  console.log('卸载提供商:', providerId);
+export const uninstallProvider = async (_providerId: string): Promise<void> => {
+  toast.warning("卸载接口待实现");
 };
 
 /**
@@ -75,9 +75,8 @@ export const uninstallProvider = async (providerId: string): Promise<void> => {
  * @param providerId 提供商ID
  * @param enabled 是否启用
  */
-export const updateProviderStatus = async (providerId: string, enabled: boolean): Promise<void> => {
-  // TODO: 等后端接口确定后实现
-  console.log('更新提供商状态:', providerId, enabled);
+export const updateProviderStatus = async (_providerId: string, _enabled: boolean): Promise<void> => {
+  toast.warning("状态更新接口待实现");
 };
 
 /**

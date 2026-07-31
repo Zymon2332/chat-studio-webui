@@ -1,8 +1,6 @@
-import { useNavigate, NavLink } from "react-router-dom";
 import {
   Settings,
   Trash2,
-  ExternalLink,
   Plus,
   Loader2,
 } from "lucide-react";
@@ -31,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { useSettingsContext } from "@/pages/settings/SettingsDialog";
 import {
   fetchInstalledProviders,
   fetchInstalledProviderConfig,
@@ -48,7 +47,7 @@ interface Provider {
 }
 
 export function InstalledProviders() {
-  const navigate = useNavigate();
+  const { navigateToTab } = useSettingsContext();
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +104,6 @@ export function InstalledProviders() {
     );
 
     // TODO: 调用后端 API 更新启用状态
-    console.log(`切换提供商 ${provider.name} 状态为:`, checked);
   };
 
   // 打开配置抽屉
@@ -172,11 +170,6 @@ export function InstalledProviders() {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  // 跳转到模型管理
-  const handleManageModels = (providerId: string) => {
-    navigate(`/settings/models?provider=${providerId}`);
   };
 
   // 确认删除
@@ -264,14 +257,6 @@ export function InstalledProviders() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleManageModels(provider.providerId)}
-                title="管理模型"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
                 className="text-destructive hover:text-destructive"
                 onClick={() => setProviderToDelete(provider)}
                 title="卸载"
@@ -287,12 +272,10 @@ export function InstalledProviders() {
             <div className="text-muted-foreground mb-4">
               还没有安装任何模型提供商
             </div>
-            <NavLink to="/settings/providers/market">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                去市场添加
-              </Button>
-            </NavLink>
+            <Button onClick={() => navigateToTab("providers", { subTab: "market" })}>
+              <Plus className="h-4 w-4 mr-2" />
+              去市场添加
+            </Button>
           </div>
         )}
       </div>

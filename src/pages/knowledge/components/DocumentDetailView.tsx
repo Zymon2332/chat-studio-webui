@@ -48,12 +48,12 @@ interface DocumentDetailViewProps {
 
 // 状态配置
 const statusConfig = {
-  PENDING: { label: '等待中', icon: Clock, color: 'text-gray-600', bgColor: 'bg-gray-100' },
-  PARSING: { label: '解析中', icon: Loader2, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-  SHARDING: { label: '分片中', icon: Loader2, color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
-  VECTORIZING: { label: '向量化', icon: Loader2, color: 'text-purple-600', bgColor: 'bg-purple-100' },
-  COMPLETED: { label: '已完成', icon: CheckCircle2, color: 'text-green-600', bgColor: 'bg-green-100' },
-  FAILED: { label: '失败', icon: XCircle, color: 'text-red-600', bgColor: 'bg-red-100' },
+  PENDING: { label: '等待中', icon: Clock, color: 'text-muted-foreground', bgColor: 'bg-muted' },
+  PARSING: { label: '解析中', icon: Loader2, color: 'text-primary', bgColor: 'bg-primary/10' },
+  SHARDING: { label: '分片中', icon: Loader2, color: 'text-primary/80', bgColor: 'bg-primary/5' },
+  VECTORIZING: { label: '向量化', icon: Loader2, color: 'text-accent-foreground', bgColor: 'bg-accent/50' },
+  COMPLETED: { label: '已完成', icon: CheckCircle2, color: 'text-primary', bgColor: 'bg-primary/10' },
+  FAILED: { label: '失败', icon: XCircle, color: 'text-destructive', bgColor: 'bg-destructive/10' },
 };
 
 function StatusBadge({ status }: { status: Document['processStatus'] }) {
@@ -268,7 +268,7 @@ export function DocumentDetailView({ document, onBack }: DocumentDetailViewProps
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-orange-500" />
+              <FileText className="h-5 w-5 text-primary" />
               <h1 className="text-lg font-semibold">{document.title}</h1>
             </div>
             {document.tags.length > 0 && (

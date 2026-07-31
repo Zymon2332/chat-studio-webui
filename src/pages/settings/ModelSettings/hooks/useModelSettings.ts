@@ -14,6 +14,7 @@ import type { DictItem } from "@/lib/common";
 
 interface AddModelForm {
   modelName: string;
+  contextLength: number;
   abilities: string[];
   useDefaultConfig: boolean;
   setting: {
@@ -28,6 +29,7 @@ interface AddModelForm {
 
 const defaultForm: AddModelForm = {
   modelName: "",
+  contextLength: 0,
   abilities: [],
   useDefaultConfig: true,
   setting: {
@@ -172,6 +174,7 @@ export function useModelSettings() {
       const request: AddModelRequest = {
         providerId: currentProvider.providerId,
         modelName: addForm.modelName.trim(),
+        contextLength: addForm.contextLength > 0 ? addForm.contextLength : undefined,
       };
 
       // 如果有选择能力

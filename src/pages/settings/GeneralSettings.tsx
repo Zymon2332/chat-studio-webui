@@ -34,7 +34,6 @@ export function GeneralSettings() {
     setLanguage(value);
     localStorage.setItem(LANGUAGE_KEY, value);
     // TODO: 接入 i18n 后实际切换界面语言
-    console.log("语言已切换为:", value);
   };
 
   // 避免服务端渲染 hydration 不匹配

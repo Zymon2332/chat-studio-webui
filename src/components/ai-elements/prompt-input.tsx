@@ -42,7 +42,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { ChatStatus, FileUIPart, SourceDocumentUIPart } from "ai";
 import {
-  CornerDownLeftIcon,
+  SendIcon,
   ImageIcon,
   Monitor,
   PlusIcon,
@@ -921,7 +921,7 @@ export const PromptInput = ({
         ref={formRef}
         {...props}
       >
-        <InputGroup className="overflow-hidden">{children}</InputGroup>
+        <InputGroup>{children}</InputGroup>
       </form>
     </>
   );
@@ -1225,7 +1225,7 @@ export const PromptInputSubmit = ({
 }: PromptInputSubmitProps) => {
   const isGenerating = status === "submitted" || status === "streaming";
 
-  let Icon = <CornerDownLeftIcon className="size-4" />;
+  let Icon = <SendIcon className="size-4" />;
 
   if (status === "submitted") {
     Icon = <Spinner />;

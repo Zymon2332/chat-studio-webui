@@ -22,7 +22,7 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from '@/components/ui/sidebar';
-import { formatTimeAgo } from '@/lib/time';
+import { formatTimeAgo } from '@/lib/utils';
 
 interface KnowledgeSidebarProps {
   knowledgeBases: KnowledgeBase[];

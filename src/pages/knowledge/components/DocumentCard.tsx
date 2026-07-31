@@ -96,38 +96,38 @@ const statusConfig: Record<
   PENDING: {
     label: '等待中',
     icon: Clock,
-    color: 'text-gray-600 dark:text-gray-400',
-    bgColor: 'bg-gray-100 dark:bg-gray-800',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
   },
   PARSING: {
     label: '解析中',
     icon: Loader2,
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    color: 'text-primary',
+    bgColor: 'bg-primary/10',
   },
   SHARDING: {
     label: '分片中',
     icon: Loader2,
-    color: 'text-yellow-600 dark:text-yellow-400',
-    bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+    color: 'text-primary/80',
+    bgColor: 'bg-primary/5',
   },
   VECTORIZING: {
     label: '向量化',
     icon: Loader2,
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    color: 'text-accent-foreground',
+    bgColor: 'bg-accent/50',
   },
   COMPLETED: {
     label: '已完成',
     icon: CheckCircle2,
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-100 dark:bg-green-900/30',
+    color: 'text-primary',
+    bgColor: 'bg-primary/10',
   },
   FAILED: {
     label: '失败',
     icon: XCircle,
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    color: 'text-destructive',
+    bgColor: 'bg-destructive/10',
   },
 };
 
@@ -204,7 +204,7 @@ export function DocumentCard({
       </div>
 
       {/* 图标 */}
-      <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
+      <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
         <Icon className="h-5 w-5" />
       </div>
 

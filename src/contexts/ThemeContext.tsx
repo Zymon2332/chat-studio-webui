@@ -17,6 +17,8 @@ export const codeThemes: CodeTheme[] = [
   { value: 'light-plus', label: 'VS Code Light+', type: 'light' },
   { value: 'dark-plus', label: 'VS Code Dark+', type: 'dark' },
   { value: 'dracula', label: 'Dracula', type: 'dark' },
+  { value: 'monokai', label: 'Monokai', type: 'dark' },
+  { value: 'everforest-dark', label: 'Everforest Dark', type: 'dark' },
 ];
 
 interface ThemeContextType {
@@ -30,7 +32,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeContextProvider({ children }: { children: ReactNode }) {
   const [fontSize, setFontSizeState] = useState<FontSize>('base');
-  const [codeTheme, setCodeThemeState] = useState<string>('github-light');
+  const [codeTheme, setCodeThemeState] = useState<string>('dark-plus');
 
   // 从 localStorage 读取设置
   useEffect(() => {

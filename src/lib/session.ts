@@ -33,7 +33,33 @@ export const getSessionTokenUsage = async (sessionId: string): Promise<number> =
   return handleResponse(response.data);
 };
 
-export const getTokenContextWindow = async (): Promise<number> => {
-  const response = await api.get<ApiResponse<number>>('/session/tokenContextWindow');
+export const getTokenContextWindow = async (modelId: number | string): Promise<number> => {
+  const response = await api.get<ApiResponse<number>>(`/session/tokenContextWindow/${modelId}`);
+  return handleResponse(response.data);
+};
+
+export const fetchWorkspaceFiles = async (sessionId: string): Promise<string[]> => {
+  const response = await api.post<ApiResponse<string[]>>(`/session/workspace/${sessionId}`);
+  return handleResponse(response.data);
+};
+
+export interface AgentReasoningResponse {
+  messages: Message[];
+  agentName: string;
+  agentAvatar: string;
+}
+
+export const fetchAgentReasoning = async (toolRequestId: string, sessionId: string): Promise<AgentReasoningResponse> => {
+  const response = await api.get<ApiResponse<AgentReasoningResponse>>('/session/agentReasoning', {
+    params: { toolRequestId, sessionId },
+  });
+  return handleResponse(response.data);
+};
+
+export const fetchFilePreviewUrl = async (sessionId: string, filePath: string): Promise<string> => {
+  const response = await api.post<ApiResponse<string>>(
+    `/session/workspace/preview`,
+    { sessionId, key: filePath }
+  );
   return handleResponse(response.data);
 };

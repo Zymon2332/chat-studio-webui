@@ -136,7 +136,7 @@ export const Reasoning = memo(
     return (
       <ReasoningContext.Provider value={contextValue}>
         <Collapsible
-          className={cn("not-prose mb-4", className)}
+          className={cn("not-prose", className)}
           onOpenChange={handleOpenChange}
           open={isOpen}
           {...props}
@@ -156,12 +156,12 @@ export type ReasoningTriggerProps = ComponentProps<
 
 const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
   if (isStreaming || duration === 0) {
-    return <Shimmer duration={1}>Thinking...</Shimmer>;
+    return <Shimmer duration={1}>思考中...</Shimmer>;
   }
   if (duration === undefined) {
-    return <p>Thought for a few seconds</p>;
+    return <p>思考了几秒钟</p>;
   }
-  return <p>Thought for {duration} seconds</p>;
+  return <p>思考了 {duration} 秒</p>;
 };
 
 export const ReasoningTrigger = memo(

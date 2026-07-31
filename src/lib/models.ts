@@ -47,6 +47,7 @@ export const deleteModel = async (modelId: number): Promise<void> => {
 export interface AddModelRequest {
   providerId: string;
   modelName: string;
+  contextLength?: number;
   abilities?: string[];
   setting?: {
     maxTokens: number;

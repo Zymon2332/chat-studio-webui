@@ -5,7 +5,9 @@ import { AdminLayout, Dashboard } from "@/pages/admin";
 import { UserManagement } from "@/pages/admin/users/UserManagement";
 import { SupplierManagement } from "@/pages/admin/suppliers/SupplierManagement";
 import { ModelCapabilityManagement } from "@/pages/admin/modelCapabilities/ModelCapabilityManagement";
-import { mainRoutes } from "./chat";
+import { PlaceholderPage } from "@/pages/placeholder/PlaceholderPage";
+import NotFound from "@/pages/NotFound";
+import { mainLayoutRoutes } from "./chat";
 
 export const routes: RouteObject[] = [
   {
@@ -25,35 +27,15 @@ export const routes: RouteObject[] = [
       </AdminRoute>
     ),
     children: [
-      {
-        index: true,
-        element: <Dashboard />,
-      },
-      {
-        path: "users",
-        element: <UserManagement />,
-      },
-      {
-        path: "suppliers",
-        element: <SupplierManagement />,
-      },
-      {
-        path: "models",
-        element: <div className="p-8 text-center">模型管理页面开发中...</div>,
-      },
-      {
-        path: "model-capabilities",
-        element: <ModelCapabilityManagement />,
-      },
-      {
-        path: "knowledge",
-        element: <div className="p-8 text-center">知识库管理页面开发中...</div>,
-      },
-      {
-        path: "settings",
-        element: <div className="p-8 text-center">系统设置页面开发中...</div>,
-      },
+      { index: true, element: <Dashboard /> },
+      { path: "users", element: <UserManagement /> },
+      { path: "suppliers", element: <SupplierManagement /> },
+      { path: "models", element: <PlaceholderPage title="模型管理" /> },
+      { path: "model-capabilities", element: <ModelCapabilityManagement /> },
+      { path: "knowledge", element: <PlaceholderPage title="知识库管理" /> },
+      { path: "settings", element: <PlaceholderPage title="系统设置" /> },
     ],
   },
-  ...mainRoutes,
+  ...mainLayoutRoutes,
+  { path: "*", element: <NotFound /> },
 ];

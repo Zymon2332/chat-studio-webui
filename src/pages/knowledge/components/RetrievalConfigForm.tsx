@@ -206,12 +206,12 @@ export function RetrievalConfigForm({ config, onChange }: RetrievalConfigFormPro
 
       {/* RERANK 配置 */}
       {config.fusionStrategy === 'RERANK' && (
-        <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-100">
+        <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-border">
+          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Search className="w-4 h-4" />
             Rerank 重排序配置
           </div>
-          <p className="text-xs text-blue-700 dark:text-blue-300">使用更精确的模型对结果重新排序，提升准确性</p>
+          <p className="text-xs text-muted-foreground">使用更精确的模型对结果重新排序，提升准确性</p>
 
           <div className="space-y-2">
             <div className="flex justify-between">
@@ -249,12 +249,12 @@ export function RetrievalConfigForm({ config, onChange }: RetrievalConfigFormPro
 
       {/* WEIGHT 配置 */}
       {config.fusionStrategy === 'WEIGHT' && (
-        <div className="space-y-4 p-4 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
-          <div className="flex items-center gap-2 text-sm font-medium text-amber-900 dark:text-amber-100">
+        <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-border">
+          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Zap className="w-4 h-4" />
             权重配置
           </div>
-          <p className="text-xs text-amber-700 dark:text-amber-300">调整向量检索和关键词检索的权重比例（两者之和必须等于1.0）</p>
+          <p className="text-xs text-muted-foreground">调整向量检索和关键词检索的权重比例（两者之和必须等于1.0）</p>
 
           <div className="space-y-2">
             <div className="flex justify-between">

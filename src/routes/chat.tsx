@@ -1,69 +1,28 @@
-import type { RouteObject } from "react-router-dom";
+import { type RouteObject, Navigate } from "react-router-dom";
 import { ProtectedMainLayout } from "@/components/layout/ProtectedMainLayout";
-import { Chat } from "@/pages/Chat";
-import { Conversation } from "@/pages/Conversation";
+import { ChatPage } from "@/pages/chat/ChatPage";
+import { ConversationPage } from "@/pages/chat/ConversationPage";
+import { SkillsPage } from "@/pages/skills/SkillsPage";
+import { AgentsPage } from "@/pages/agents/AgentsPage";
+import { AgentFormPage } from "@/pages/agents/AgentFormPage";
+import { TeamFormPage } from "@/pages/teams/TeamFormPage";
 import { KnowledgeBase } from "@/pages/knowledge";
-import { settingsRoutes } from "./settings";
 
-export const chatRoutes: RouteObject[] = [
+export const mainLayoutRoutes: RouteObject[] = [
   {
-    path: "/",
-    element: (
-      <ProtectedMainLayout>
-        <Chat />
-      </ProtectedMainLayout>
-    ),
+    element: <ProtectedMainLayout />,
+    children: [
+      { index: true, element: <ChatPage /> },
+      { path: "chat/:id?", element: <ChatPage /> },
+      { path: "conversation/new", element: <Navigate to="/" replace /> },
+      { path: "conversation/:id", element: <ConversationPage /> },
+      { path: "knowledge", element: <KnowledgeBase /> },
+      { path: "skills", element: <SkillsPage /> },
+      { path: "agents", element: <AgentsPage /> },
+      { path: "agents/new", element: <AgentFormPage /> },
+      { path: "agents/:id/edit", element: <AgentFormPage /> },
+      { path: "teams/new", element: <TeamFormPage /> },
+      { path: "teams/:id/edit", element: <TeamFormPage /> },
+    ],
   },
-  {
-    path: "/chat/:id?",
-    element: (
-      <ProtectedMainLayout>
-        <Chat />
-      </ProtectedMainLayout>
-    ),
-  },
-];
-
-export const conversationRoutes: RouteObject[] = [
-  {
-    path: "/conversation/:id",
-    element: (
-      <ProtectedMainLayout>
-        <Conversation />
-      </ProtectedMainLayout>
-    ),
-  },
-];
-
-export const knowledgeRoutes: RouteObject[] = [
-  {
-    path: "/knowledge",
-    element: (
-      <ProtectedMainLayout>
-        <KnowledgeBase />
-      </ProtectedMainLayout>
-    ),
-  },
-];
-
-export const toolRoutes: RouteObject[] = [
-  {
-    path: "/tools",
-    element: (
-      <ProtectedMainLayout>
-        <div className="p-8">
-          <h1 className="text-2xl font-bold">工具与技能</h1>
-          <p className="text-muted-foreground mt-2">工具功能开发中...</p>
-        </div>
-      </ProtectedMainLayout>
-    ),
-  },
-];
-
-export const mainRoutes: RouteObject[] = [
-  ...chatRoutes,
-  ...conversationRoutes,
-  ...knowledgeRoutes,
-  ...toolRoutes,
-  ...settingsRoutes,
 ];

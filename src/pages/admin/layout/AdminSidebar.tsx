@@ -82,9 +82,14 @@ export function AdminSidebar() {
   return (
     <>
       <Sidebar variant="sidebar">
-        <SidebarHeader className="flex flex-col items-center justify-center px-4 py-4 gap-1">
-          <span className="font-bold text-base">Chat Studio</span>
-          <span className="text-xs text-muted-foreground">管理后台</span>
+        <SidebarHeader className="flex flex-col items-center justify-center px-4 py-4 gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#D4A040]/15 flex items-center justify-center shrink-0">
+              <span className="text-[#D4A040] font-serif-display text-sm leading-none">C</span>
+            </div>
+            <span className="font-medium text-sm text-sidebar-foreground">Chat Studio</span>
+          </div>
+          <span className="text-[10px] text-sidebar-foreground/40 tracking-widest uppercase">管理后台</span>
         </SidebarHeader>
 
         <SidebarContent>

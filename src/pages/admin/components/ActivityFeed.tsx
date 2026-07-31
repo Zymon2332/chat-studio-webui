@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDistanceToNow } from '@/lib/utils';
+import { formatTimeAgo } from '@/lib/utils';
 import { UserPlus, MessageSquare, Database, Settings, Bell } from 'lucide-react';
 
 interface Activity {
@@ -22,11 +22,11 @@ interface ActivityFeedProps {
 }
 
 const activityIcons = {
-  user_registered: { icon: UserPlus, color: 'bg-emerald-500' },
-  conversation_created: { icon: MessageSquare, color: 'bg-blue-500' },
-  knowledge_updated: { icon: Database, color: 'bg-amber-500' },
-  system_notification: { icon: Bell, color: 'bg-purple-500' },
-  settings_changed: { icon: Settings, color: 'bg-slate-500' },
+  user_registered: { icon: UserPlus, color: 'bg-primary' },
+  conversation_created: { icon: MessageSquare, color: 'bg-primary/70' },
+  knowledge_updated: { icon: Database, color: 'bg-[#D4A040]' },
+  system_notification: { icon: Bell, color: 'bg-accent' },
+  settings_changed: { icon: Settings, color: 'bg-muted-foreground' },
 };
 
 export const ActivityFeed: React.FC<ActivityFeedProps> = ({
@@ -79,12 +79,12 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
                   <div className="flex-1 min-w-0">
                     <p className="text-sm">{activity.message}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(new Date(activity.timestamp))}
+                      {formatTimeAgo(activity.timestamp)}
                     </p>
                   </div>
                   {activity.user && (
                     <Avatar className="h-7 w-7">
-                      <AvatarFallback className="text-xs bg-indigo-100 text-indigo-700">
+                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {activity.user.email.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>

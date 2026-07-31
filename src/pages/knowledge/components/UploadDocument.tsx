@@ -77,6 +77,7 @@ export function UploadDocument({ kbId, knowledgeBaseName, onClose, onSuccess }: 
       const signature = await fetchPostSignature({
         fileOriginalName: selectedFile.name,
         contentType: selectedFile.type,
+        appId: 'DOCUMENT',
       });
 
       await uploadFileToS3(selectedFile, selectedFile.type, signature, (progress) => {
@@ -334,12 +335,12 @@ export function UploadDocument({ kbId, knowledgeBaseName, onClose, onSuccess }: 
 
             {/* HEADER 模式参数 */}
             {splitMode === 'HEADER' && (
-              <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-100">
+              <div className="space-y-3 p-4 bg-muted/50 rounded-lg border border-border">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                   标题层级
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm">Header Level:</span>
+                  <span className="text-sm text-muted-foreground">Header Level:</span>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((level) => (
                       <button
@@ -360,7 +361,7 @@ export function UploadDocument({ kbId, knowledgeBaseName, onClose, onSuccess }: 
                     ))}
                   </div>
                 </div>
-                <p className="text-xs text-blue-700 dark:text-blue-300">
+                <p className="text-xs text-muted-foreground">
                   按 H1-H{headerLevel} 标题层级分割文档
                 </p>
               </div>
@@ -368,10 +369,10 @@ export function UploadDocument({ kbId, knowledgeBaseName, onClose, onSuccess }: 
 
             {/* LENGTH 模式参数 */}
             {splitMode === 'LENGTH' && (
-              <div className="space-y-3 p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="space-y-3 p-4 bg-muted/50 rounded-lg border border-border">
                 <div className="flex justify-between">
-                  <Label className="text-sm text-green-900 dark:text-green-100">重叠长度</Label>
-                  <span className="text-sm font-medium">{overlapLength}</span>
+                  <Label className="text-sm text-foreground">重叠长度</Label>
+                  <span className="text-sm font-medium text-foreground">{overlapLength}</span>
                 </div>
                 <Slider
                   value={[overlapLength]}
@@ -383,7 +384,7 @@ export function UploadDocument({ kbId, knowledgeBaseName, onClose, onSuccess }: 
                   max={1024}
                   step={16}
                 />
-                <p className="text-xs text-green-700 dark:text-green-300">
+                <p className="text-xs text-muted-foreground">
                   相邻片段之间的重叠字符数：{overlapLength}
                 </p>
               </div>
@@ -391,9 +392,9 @@ export function UploadDocument({ kbId, knowledgeBaseName, onClose, onSuccess }: 
 
             {/* REGEX 模式参数 */}
             {splitMode === 'REGEX' && (
-              <div className="space-y-4 p-4 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-border">
                 <div className="space-y-2">
-                  <Label className="text-sm text-amber-900 dark:text-amber-100">正则表达式 *</Label>
+                  <Label className="text-sm text-foreground">正则表达式 *</Label>
                   <Input
                     placeholder="输入正则表达式，如：\\n{2,}"
                     value={regex}
@@ -402,12 +403,12 @@ export function UploadDocument({ kbId, knowledgeBaseName, onClose, onSuccess }: 
                       setPreviewData(null);
                     }}
                   />
-                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                  <p className="text-xs text-muted-foreground">
                     用于匹配分割位置的正则表达式
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm text-amber-900 dark:text-amber-100">切片标识符</Label>
+                  <Label className="text-sm text-foreground">切片标识符</Label>
                   <Input
                     placeholder="默认为 \\n"
                     value={joinDelimiter}
@@ -416,7 +417,7 @@ export function UploadDocument({ kbId, knowledgeBaseName, onClose, onSuccess }: 
                       setPreviewData(null);
                     }}
                   />
-                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                  <p className="text-xs text-muted-foreground">
                     片段之间的连接符
                   </p>
                 </div>

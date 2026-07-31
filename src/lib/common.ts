@@ -29,13 +29,18 @@ export interface PostSignatureResponse {
 }
 
 /**
+ * 文件上传业务分类
+ */
+export type AppId = 'DOCUMENT' | 'SKILLS';
+
+/**
  * 上传确认请求
  */
 export interface UploadConfirmRequest {
   objectKey: string;
   originalFileName: string;
   taskId: string;
-  appId: 'DOCUMENT';
+  appId: AppId;
 }
 
 /**
@@ -44,6 +49,7 @@ export interface UploadConfirmRequest {
 export interface PostSignatureRequest {
   fileOriginalName: string;
   contentType: string;
+  appId: AppId;
 }
 
 /**

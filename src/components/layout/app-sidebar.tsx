@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { SettingsDialog } from "@/pages/settings/SettingsDialog";
 import {
   Sidebar,
   SidebarContent,
@@ -32,11 +33,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, BookOpen, Wrench, Settings, ChevronUp, LogOut, MoreVertical, Edit, Trash, LayoutDashboard } from "lucide-react";
+import { Plus, BookOpen, Wrench, Bot, Settings, ChevronUp, ChevronDown, LogOut, MoreVertical, Edit, Trash } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import logo from "@/assets/logo.svg";
-import { getSessionList, renameSession, deleteSessions } from "@/lib/session";
+import { renameSession, deleteSessions } from "@/lib/session";
 import { Input } from "@/components/ui/input";
+import { useSession } from "@/contexts/SessionContext";
 import type { Session } from "@/types/session";
 
 export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "inset" }) {
@@ -50,14 +51,14 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
 
   const handleNewChat = () => navigate("/");
   const handleNavigate = (path: string) => navigate(path);
-  const handleSettings = () => navigate("/settings");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const handleSettings = () => setSettingsOpen(true);
+  const [showAllSessions, setShowAllSessions] = useState(false);
   
   // 退出登录确认对话框状态
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   
-  // 历史对话状态
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { sessions, isLoading, fetchSessions } = useSession();
   
   // 行内编辑状态
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
@@ -68,39 +69,9 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
-  // 获取历史对话列表
   useEffect(() => {
-    const fetchSessions = async () => {
-      setIsLoading(true);
-      try {
-        const data = await getSessionList();
-        // 按 updatedAt 降序排序（最新的在前）
-        const sorted = data.sort((a, b) => b.updatedAt - a.updatedAt);
-        setSessions(sorted);
-      } catch {
-        // 静默失败
-        setSessions([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchSessions();
-
-    // 监听刷新会话列表事件
-    const handleRefreshSessions = () => {
-      // 延迟2秒后刷新，确保后端数据已同步
-      setTimeout(() => {
-        fetchSessions();
-      }, 2000);
-    };
-
-    window.addEventListener('refresh-sessions', handleRefreshSessions);
-
-    return () => {
-      window.removeEventListener('refresh-sessions', handleRefreshSessions);
-    };
-  }, []);
+  }, [fetchSessions]);
   
   const handleLogoutClick = () => {
     setShowLogoutDialog(true);
@@ -128,8 +99,7 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
     
     try {
       await renameSession(editingSessionId, editingTitle.trim());
-      const data = await getSessionList();
-      setSessions(data.sort((a, b) => b.updatedAt - a.updatedAt));
+      await fetchSessions();
     } catch {
       // 静默失败
     } finally {
@@ -171,8 +141,7 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
         navigate("/");
       }
       
-      const data = await getSessionList();
-      setSessions(data.sort((a, b) => b.updatedAt - a.updatedAt));
+      await fetchSessions();
     } catch {
       // 静默失败
     } finally {
@@ -186,11 +155,14 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
       <SidebarHeader className="p-4">
         <div className={"flex items-center " + (isCollapsed ? "justify-center" : "justify-between")}>
           {!isCollapsed && (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                <img src={logo} alt="Logo" className="h-18 w-18 object-contain" />
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#D4A040]/15 flex items-center justify-center shrink-0">
+                <span className="text-[#D4A040] font-serif-display text-lg leading-none">C</span>
               </div>
-              <span className="font-semibold text-sm">Chat-Studio</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-sidebar-foreground tracking-tight">Chat Studio</span>
+                <span className="text-[10px] text-sidebar-foreground/30 tracking-widest uppercase">Studio</span>
+              </div>
             </div>
           )}
           <SidebarTrigger />
@@ -205,12 +177,12 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
                 <SidebarMenuButton 
                   asChild 
                   onClick={handleNewChat}
-                  tooltip="新建对话"
-                  className="text-primary"
+                  tooltip="新建任务"
+                  className="text-[#D4A040] hover:text-[#D4A040] data-[active=true]:bg-[#D4A040]/10"
                 >
-                  <div className="flex items-center gap-2 cursor-pointer">
+                  <div className="flex items-center gap-2 cursor-pointer font-medium">
                     <Plus className="h-4 w-4" />
-                    <span>新建对话</span>
+                    <span>新建任务</span>
                   </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -232,13 +204,27 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
               <SidebarMenuItem>
                 <SidebarMenuButton 
                   asChild 
-                  isActive={isActive("/tools")}
-                  onClick={() => handleNavigate("/tools")}
-                  tooltip="工具与技能"
+                  isActive={isActive("/skills")}
+                  onClick={() => handleNavigate("/skills")}
+                  tooltip="技能"
                 >
                   <div className="flex items-center gap-2 cursor-pointer">
                     <Wrench className="h-4 w-4" />
-                    <span>工具与技能</span>
+                    <span>技能</span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={isActive("/agents")}
+                  onClick={() => handleNavigate("/agents")}
+                  tooltip="智能体管理"
+                >
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <Bot className="h-4 w-4" />
+                    <span>智能体管理</span>
                   </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -254,9 +240,9 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
                 <div className="px-4 py-2 text-sm text-muted-foreground">加载中...</div>
               ) : sessions.length === 0 ? (
                 <div className="px-4 py-2 text-sm text-muted-foreground">暂无历史对话</div>
-              ) : (
+              ) : (<>
                 <SidebarMenu>
-                  {sessions.map((session) => (
+                  {(showAllSessions ? sessions : sessions.slice(0, 5)).map((session) => (
                     <SidebarMenuItem key={session.sessionId}>
                       {editingSessionId === session.sessionId ? (
                         <div className="flex items-center px-2 py-1">
@@ -273,7 +259,7 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
                         <div className="flex items-center w-full">
                           <SidebarMenuButton
                             className="flex-1"
-                            onClick={() => navigate(`/conversation/${session.sessionId}`)}
+                            onClick={() => navigate(`/conversation/${session.sessionId}`, { state: { sessionTitle: session.sessionTitle } })}
                           >
                             <span className="truncate">{session.sessionTitle}</span>
                           </SidebarMenuButton>
@@ -307,6 +293,19 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>
+                {sessions.length > 5 && (
+                  <button
+                    onClick={() => setShowAllSessions(!showAllSessions)}
+                    className="flex items-center justify-start w-full gap-1 px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showAllSessions ? (
+                      <>收起 <ChevronUp className="h-3 w-3 inline" /></>
+                    ) : (
+                      <>查看更多 ({sessions.length - 5}) <ChevronDown className="h-3 w-3 inline" /></>
+                    )}
+                  </button>
+                )}
+              </>
               )}
             </SidebarGroupContent>
           </SidebarGroup>
@@ -366,13 +365,6 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
               <span>设置</span>
             </DropdownMenuItem>
 
-            {user?.userRole === 'ADMIN' && (
-              <DropdownMenuItem onClick={() => navigate("/admin")}>
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                <span>后台管理</span>
-              </DropdownMenuItem>
-            )}
-
             <DropdownMenuSeparator />
 
             <DropdownMenuItem onClick={handleLogoutClick}>
@@ -404,6 +396,8 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
       </AlertDialogContent>
     </AlertDialog>
     
+    <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
     {/* 删除会话确认对话框 */}
     <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
       <AlertDialogContent>

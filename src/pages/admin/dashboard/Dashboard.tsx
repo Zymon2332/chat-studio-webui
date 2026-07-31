@@ -23,10 +23,10 @@ const mockTrendData = [
 ];
 
 const mockPieData = [
-  { name: 'GPT-4', value: 450, color: '#6366f1' },
-  { name: 'GPT-3.5', value: 300, color: '#8b5cf6' },
-  { name: 'Claude', value: 200, color: '#ec4899' },
-  { name: '其他', value: 50, color: '#94a3b8' },
+  { name: 'GPT-4', value: 450, color: '#D4A040' },
+  { name: 'GPT-3.5', value: 300, color: '#B8860B' },
+  { name: 'Claude', value: 200, color: '#8B6914' },
+  { name: '其他', value: 50, color: '#6B5B3E' },
 ];
 
 const mockActivities = [
@@ -93,7 +93,6 @@ export const Dashboard: React.FC = () => {
           change={mockStats.users.change}
           changeType="positive"
           icon={Users}
-          iconBgColor="bg-blue-500"
           loading={loading}
         />
         <StatCard
@@ -102,7 +101,6 @@ export const Dashboard: React.FC = () => {
           change={mockStats.conversations.change}
           changeType="positive"
           icon={MessageSquare}
-          iconBgColor="bg-emerald-500"
           loading={loading}
         />
         <StatCard
@@ -111,7 +109,6 @@ export const Dashboard: React.FC = () => {
           change={mockStats.tokens.change}
           changeType="positive"
           icon={Zap}
-          iconBgColor="bg-violet-500"
           loading={loading}
         />
         <StatCard
@@ -120,7 +117,6 @@ export const Dashboard: React.FC = () => {
           change={mockStats.activeUsers.change}
           changeType="negative"
           icon={Activity}
-          iconBgColor="bg-orange-500"
           loading={loading}
         />
       </div>
@@ -152,8 +148,8 @@ export const Dashboard: React.FC = () => {
           <div className="text-sm font-medium">快捷操作</div>
           <div className="grid gap-3">
             <button className="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors text-left">
-              <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                <Users className="w-5 h-5 text-indigo-600" />
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Users className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <p className="font-medium">用户管理</p>
@@ -162,8 +158,8 @@ export const Dashboard: React.FC = () => {
             </button>
             
             <button className="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors text-left">
-              <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-emerald-600" />
+              <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-secondary-foreground" />
               </div>
               <div>
                 <p className="font-medium">对话监控</p>
@@ -172,8 +168,8 @@ export const Dashboard: React.FC = () => {
             </button>
             
             <button className="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors text-left">
-              <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
-                <Zap className="w-5 h-5 text-violet-600" />
+              <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
+                <Zap className="w-5 h-5 text-accent-foreground" />
               </div>
               <div>
                 <p className="font-medium">系统设置</p>

@@ -19,13 +19,13 @@ export const StatCard: React.FC<StatCardProps> = ({
   change,
   changeType = 'neutral',
   icon: Icon,
-  iconBgColor = 'bg-indigo-500',
+  iconBgColor = 'bg-primary',
   loading = false,
 }) => {
   const changeColors = {
-    positive: 'text-emerald-600',
+    positive: 'text-primary',
     negative: 'text-red-600',
-    neutral: 'text-slate-600',
+    neutral: 'text-muted-foreground',
   };
 
   const ChangeIcon = changeType === 'positive' ? TrendingUp : changeType === 'negative' ? TrendingDown : null;
@@ -35,10 +35,10 @@ export const StatCard: React.FC<StatCardProps> = ({
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-slate-200 animate-pulse" />
+            <div className="w-12 h-12 rounded-xl bg-muted animate-pulse" />
             <div className="flex-1 space-y-2">
-              <div className="h-4 w-20 bg-slate-200 rounded animate-pulse" />
-              <div className="h-8 w-16 bg-slate-200 rounded animate-pulse" />
+              <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+              <div className="h-8 w-16 bg-muted rounded animate-pulse" />
             </div>
           </div>
         </CardContent>
