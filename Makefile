@@ -41,7 +41,7 @@ help:
 build:
 	@echo "$(BLUE)正在构建镜像 $(FULL_IMAGE_NAME):$(VERSION)...$(NC)"
 	@echo "$(YELLOW)后端地址: $(API_URL)$(NC)"
-	docker build \
+	docker buildx build --platform linux/amd64 \
 		--build-arg VITE_API_BASE_URL=$(API_URL) \
 		-t $(FULL_IMAGE_NAME):$(VERSION) .
 	@echo "$(GREEN)✓ 构建完成: $(FULL_IMAGE_NAME):$(VERSION)$(NC)"
@@ -50,7 +50,7 @@ build:
 build-no-cache:
 	@echo "$(BLUE)正在构建镜像（不使用缓存）...$(NC)"
 	@echo "$(YELLOW)后端地址: $(API_URL)$(NC)"
-	docker build --no-cache \
+	docker buildx build --platform linux/amd64 --no-cache \
 		--build-arg VITE_API_BASE_URL=$(API_URL) \
 		-t $(FULL_IMAGE_NAME):$(VERSION) .
 	@echo "$(GREEN)✓ 构建完成: $(FULL_IMAGE_NAME):$(VERSION)$(NC)"
