@@ -156,7 +156,7 @@ export const ChatMessages = forwardRef<ChatMessagesRef, ChatMessagesProps>(
     }, []);
 
     return (
-      <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+      <MessageScrollerProvider autoScroll={false} defaultScrollPosition="end">
         <MessageScroller className="flex-1 min-h-0">
           <ChatMessagesInner messages={messages} onReady={handleReady} />
         </MessageScroller>
