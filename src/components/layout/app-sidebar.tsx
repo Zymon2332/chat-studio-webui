@@ -234,12 +234,12 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
 
         {!isCollapsed && (
           <SidebarGroup className="flex-1 overflow-hidden">
-            <SidebarGroupLabel>历史对话</SidebarGroupLabel>
+            <SidebarGroupLabel>任务</SidebarGroupLabel>
             <SidebarGroupContent className="overflow-y-auto max-h-[calc(100vh-340px)]">
               {isLoading ? (
                 <div className="px-4 py-2 text-sm text-muted-foreground">加载中...</div>
               ) : sessions.length === 0 ? (
-                <div className="px-4 py-2 text-sm text-muted-foreground">暂无历史对话</div>
+                <div className="px-4 py-2 text-sm text-muted-foreground">暂无任务</div>
               ) : (<>
                 <SidebarMenu>
                   {(showAllSessions ? sessions : sessions.slice(0, 5)).map((session) => (
@@ -283,7 +283,7 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
                                   className="text-destructive"
                                 >
                                   <Trash className="mr-2 h-4 w-4" />
-                                  删除会话
+                                  删除任务
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

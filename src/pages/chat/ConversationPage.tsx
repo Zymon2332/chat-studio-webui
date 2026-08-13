@@ -93,6 +93,7 @@ export function ConversationPage() {
 
   const [showPanel, setShowPanel] = useState(false);
   const [panelTab, setPanelTab] = useState<"workspace" | "reasoning">("workspace");
+  const [showFileTree, setShowFileTree] = useState(true);
 
   const [agentReasoning, setAgentReasoning] = useState<{
     loading: boolean;
@@ -177,6 +178,7 @@ export function ConversationPage() {
       } else {
         setPreviewUrl(url);
       }
+      setShowFileTree(false);
     } catch {
       toast.error("加载文件预览失败");
     } finally {
@@ -189,6 +191,7 @@ export function ConversationPage() {
     setPanelTab("workspace");
     setWorkspaceFiles([]);
     setPreviewContent(null);
+    setShowFileTree(true);
     setAgentReasoning({ loading: false, agentName: "", agentAvatar: "", messages: [] });
   }, [id]);
 
@@ -210,6 +213,7 @@ export function ConversationPage() {
         setPreviewContent(null);
         setPreviewPath(null);
         setRefreshKey(0);
+        setShowFileTree(true);
       }
       return !prev;
     });
@@ -464,16 +468,18 @@ export function ConversationPage() {
                   </div>
                 ) : (
                   <ResizablePanelGroup className="flex-1">
-                    <ResizablePanel defaultSize="30%" minSize="25%">
-                      <div className="h-full overflow-y-auto pt-2 px-3 pb-4">
-                        <FileTree className="border-none" onSelect={handleFileSelect}>
-                          {fileTree}
-                        </FileTree>
-                      </div>
-                    </ResizablePanel>
+                    {showFileTree && (
+                      <ResizablePanel defaultSize="30%" minSize="25%">
+                        <div className="h-full overflow-y-auto pt-2 px-3 pb-4">
+                          <FileTree className="border-none" onSelect={handleFileSelect}>
+                            {fileTree}
+                          </FileTree>
+                        </div>
+                      </ResizablePanel>
+                    )}
                     {(previewUrl || previewContent) && (
                       <>
-                        <ResizableHandle withHandle />
+                        {showFileTree && <ResizableHandle withHandle />}
                         <ResizablePanel defaultSize="70%" minSize="25%">
                           <ChatWorkspacePreview
                             previewUrl={previewUrl}
@@ -485,6 +491,8 @@ export function ConversationPage() {
                             onRefresh={handleRefresh}
                             onOpenNewTab={handleOpenNewTab}
                             onFullscreen={handleFullscreen}
+                            onToggleFileTree={() => setShowFileTree(v => !v)}
+                            showFileTree={showFileTree}
                           />
                         </ResizablePanel>
                       </>
