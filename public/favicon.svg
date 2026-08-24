@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- 品牌底块：近黑圆角方块 -->
+  <rect width="48" height="48" rx="10" fill="#171717"/>
+  <!-- 对话气泡（白色描边） -->
+  <path d="M24 10c-7 0-12 4.6-12 10.2 0 3 1.6 5.6 4 7.4V34l4.1-2.2c1.3.1 2.6.2 3.9.2 7 0 12-4.6 12-10.2S31 10 24 10Z"
+        fill="none" stroke="#fafafa" stroke-width="2.4" stroke-linejoin="round"/>
+  <!-- 智能体节点（白色实心） -->
+  <circle cx="24" cy="20" r="3" fill="#fafafa"/>
+  <!-- 轨道环（白色虚线） -->
+  <circle cx="24" cy="20" r="5.8" fill="none" stroke="#fafafa" stroke-width="1.8"
+          stroke-dasharray="3.4 3.4" opacity="0.6"/>
+</svg>

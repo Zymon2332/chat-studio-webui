@@ -23,10 +23,10 @@ const mockTrendData = [
 ];
 
 const mockPieData = [
-  { name: 'GPT-4', value: 450, color: '#D4A040' },
-  { name: 'GPT-3.5', value: 300, color: '#B8860B' },
-  { name: 'Claude', value: 200, color: '#8B6914' },
-  { name: '其他', value: 50, color: '#6B5B3E' },
+  { name: 'GPT-4', value: 450, color: '#171717' },
+  { name: 'GPT-3.5', value: 300, color: '#525252' },
+  { name: 'Claude', value: 200, color: '#a3a3a3' },
+  { name: '其他', value: 50, color: '#d4d4d4' },
 ];
 
 const mockActivities = [

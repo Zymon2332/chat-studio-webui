@@ -57,7 +57,7 @@ export const ChatWorkspacePreview = memo(function ChatWorkspacePreview({
       {previewPath && (
         <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg border border-border/40 bg-muted/20 mb-2 shrink-0">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <FileText className="size-4 shrink-0 text-[#D4A040]" />
+            <FileText className="size-4 shrink-0 text-muted-foreground" />
             <span className="truncate text-xs font-medium text-foreground/90">
               {fileName}
             </span>
@@ -136,7 +136,7 @@ export const ChatWorkspacePreview = memo(function ChatWorkspacePreview({
       {/* Preview content */}
       {previewLoading ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <div className="w-3.5 h-3.5 rounded-full border-2 border-[#D4A040]/30 border-t-[#D4A040] animate-spin" />
+          <div className="w-3.5 h-3.5 rounded-full border-2 border-muted-foreground/30 border-t-foreground animate-spin" />
           加载中...
         </div>
       ) : previewContent ? (

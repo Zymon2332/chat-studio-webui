@@ -32,7 +32,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeContextProvider({ children }: { children: ReactNode }) {
   const [fontSize, setFontSizeState] = useState<FontSize>('base');
-  const [codeTheme, setCodeThemeState] = useState<string>('dark-plus');
+  const [codeTheme, setCodeThemeState] = useState<string>('github-light');
 
   // 从 localStorage 读取设置
   useEffect(() => {

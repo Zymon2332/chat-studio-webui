@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, BookOpen, Wrench, Bot, Settings, ChevronUp, ChevronDown, LogOut, MoreVertical, Edit, Trash } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { BrandMark } from "@/components/BrandMark";
 import { renameSession, deleteSessions } from "@/lib/session";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/contexts/SessionContext";
@@ -156,12 +157,12 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
         <div className={"flex items-center " + (isCollapsed ? "justify-center" : "justify-between")}>
           {!isCollapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#D4A040]/15 flex items-center justify-center shrink-0">
-                <span className="text-[#D4A040] font-serif-display text-lg leading-none">C</span>
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <BrandMark className="size-5 text-primary" />
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-sidebar-foreground tracking-tight">Chat Studio</span>
-                <span className="text-[10px] text-sidebar-foreground/30 tracking-widest uppercase">Studio</span>
+                <span className="text-[10px] text-sidebar-foreground/40 tracking-widest uppercase">Agent Platform</span>
               </div>
             </div>
           )}
@@ -178,7 +179,7 @@ export function AppSidebar({ variant = "sidebar" }: { variant?: "sidebar" | "ins
                   asChild 
                   onClick={handleNewChat}
                   tooltip="新建任务"
-                  className="text-[#D4A040] hover:text-[#D4A040] data-[active=true]:bg-[#D4A040]/10"
+                  className="text-primary hover:text-primary data-[active=true]:bg-primary/10"
                 >
                   <div className="flex items-center gap-2 cursor-pointer font-medium">
                     <Plus className="h-4 w-4" />

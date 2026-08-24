@@ -22,11 +22,11 @@ interface ActivityFeedProps {
 }
 
 const activityIcons = {
-  user_registered: { icon: UserPlus, color: 'bg-primary' },
-  conversation_created: { icon: MessageSquare, color: 'bg-primary/70' },
-  knowledge_updated: { icon: Database, color: 'bg-[#D4A040]' },
+  user_registered: { icon: UserPlus, color: 'bg-foreground' },
+  conversation_created: { icon: MessageSquare, color: 'bg-foreground/70' },
+  knowledge_updated: { icon: Database, color: 'bg-muted-foreground' },
   system_notification: { icon: Bell, color: 'bg-accent' },
-  settings_changed: { icon: Settings, color: 'bg-muted-foreground' },
+  settings_changed: { icon: Settings, color: 'bg-muted-foreground/70' },
 };
 
 export const ActivityFeed: React.FC<ActivityFeedProps> = ({

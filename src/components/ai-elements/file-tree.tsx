@@ -195,9 +195,9 @@ export const FileTreeFolder = ({
             >
               <FileTreeIcon>
                 {isExpanded ? (
-                  <FolderOpenIcon className="size-4 text-[#D4A040]/80" />
+                  <FolderOpenIcon className="size-4 text-muted-foreground" />
                 ) : (
-                  <FolderIcon className="size-4 text-[#D4A040]/80" />
+                  <FolderIcon className="size-4 text-muted-foreground" />
                 )}
               </FileTreeIcon>
               <FileTreeName>{name}</FileTreeName>

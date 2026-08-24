@@ -6,6 +6,7 @@ import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion";
 import { createSession } from "@/lib/session";
 import { useSession } from "@/contexts/SessionContext";
 import { motion } from "motion/react";
+import { BrandMark } from "@/components/BrandMark";
 
 type Mode = "office" | "coding" | "design";
 
@@ -55,26 +56,27 @@ export function ChatPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-full relative">
-      {/* Ambient glow spots */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-[#D4A040]/4 blur-[150px] animate-ambient-glow" />
-        <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full bg-[#D4A040]/3 blur-[120px] animate-ambient-glow" style={{ animationDelay: '-6s' }} />
-      </div>
-
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 relative z-10">
         <div className="w-full max-w-3xl space-y-0">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-6"
+            className="mb-7 space-y-3"
           >
-            <h1 className="text-5xl md:text-6xl font-serif-display text-foreground tracking-tight leading-[1.08]">
-              Chat Studio
-            </h1>
-            <p className="text-3xl md:text-4xl font-serif-display text-foreground/70 tracking-tight mt-2 font-normal">
-              你的 AI 工作伙伴
-            </p>
+            <div className="flex items-center gap-3">
+              <div className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
+                <BrandMark className="size-6" />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+                Chat Studio
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-3 pl-[52px]">
+              <span className="h-px w-8 bg-border shrink-0" />
+              <p className="text-base text-muted-foreground">你的 AI 工作伙伴</p>
+            </div>
           </motion.div>
 
           <motion.div
@@ -93,12 +95,12 @@ export function ChatPage() {
                 {mode === key && (
                   <motion.span
                     layoutId="mode-bg"
-                    className="absolute inset-0 rounded-lg bg-[#D4A040] shadow-[0_0_12px_rgba(212,160,64,0.2)]"
+                    className="absolute inset-0 rounded-lg bg-primary"
                     transition={{ type: "spring", stiffness: 500, damping: 35 }}
                   />
                 )}
                 <span className={`relative z-10 transition-colors duration-300 ${
-                  mode === key ? "text-[#050505] font-medium" : "text-muted-foreground hover:text-foreground"
+                  mode === key ? "text-primary-foreground font-medium" : "text-muted-foreground hover:text-foreground"
                 }`}>
                   {modeConfig[key].icon} {modeConfig[key].label}
                 </span>

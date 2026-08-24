@@ -40,6 +40,7 @@ import {
   Cpu,
 } from "lucide-react";
 import { useState } from "react";
+import { BrandMark } from "@/components/BrandMark";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -84,8 +85,8 @@ export function AdminSidebar() {
       <Sidebar variant="sidebar">
         <SidebarHeader className="flex flex-col items-center justify-center px-4 py-4 gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#D4A040]/15 flex items-center justify-center shrink-0">
-              <span className="text-[#D4A040] font-serif-display text-sm leading-none">C</span>
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <BrandMark className="size-4 text-primary" />
             </div>
             <span className="font-medium text-sm text-sidebar-foreground">Chat Studio</span>
           </div>

@@ -1,4 +1,3 @@
-import './login.css';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,31 +6,111 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
+import { Message, MessageContent } from '@/components/ui/message';
+import { Bubble, BubbleContent } from '@/components/ui/bubble';
+import { ChatToolCall } from './chat/components/ChatToolCall';
 import {
   ArrowRight,
-  Bot,
   Check,
-  CircleDot,
   Eye,
   EyeOff,
-  KeyRound,
   Loader2,
-  LockKeyhole,
-  Mail,
-  MessageSquareText,
-  ShieldCheck,
-  UserPlus,
-  Workflow,
-  Zap,
+  Bot,
+  Database,
+  Wrench,
+  Users,
+  Send,
+  Paperclip,
+  Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { BrandMark } from '@/components/BrandMark';
 
 type TabKey = 'login' | 'register';
 
-const tabItems: Array<{ key: TabKey; label: string; index: string }> = [
-  { key: 'login', label: '登录', index: '01' },
-  { key: 'register', label: '注册', index: '02' },
+const tabItems: Array<{ key: TabKey; label: string }> = [
+  { key: 'login', label: '登录' },
+  { key: 'register', label: '注册' },
 ];
+
+const features = [
+  { icon: Bot, title: '多智能体协作', desc: '编排多个智能体与团队，自动路由任务' },
+  { icon: Database, title: '知识库驱动', desc: '接入文档与知识库，让回答有据可依' },
+  { icon: Wrench, title: '技能扩展', desc: '通过技能与工具扩展模型能力边界' },
+  { icon: Users, title: '团队协作', desc: '成员共享会话与资源，高效协同' },
+];
+
+/* ── 产品演示预览（复用真实聊天渲染组件） ── */
+function DemoPreview() {
+  return (
+    <div className="relative w-full max-w-md animate-float select-none">
+      {/* 光晕 */}
+      <div className="absolute -inset-6 rounded-[28px] bg-primary/[0.04] blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-background shadow-[0_24px_70px_-20px_rgba(0,0,0,0.18)]">
+        {/* 窗口头 */}
+        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+          <div className="flex gap-1.5">
+            <span className="size-2.5 rounded-full bg-[#FF5F57]" />
+            <span className="size-2.5 rounded-full bg-[#FEBC2E]" />
+            <span className="size-2.5 rounded-full bg-[#28C840]" />
+          </div>
+          <span className="ml-1 flex-1 truncate text-xs font-medium text-muted-foreground">
+            对话演示
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
+            <Sparkles className="size-3 text-foreground/70" />
+            GPT-4o
+          </span>
+        </div>
+
+        {/* 消息区 — 使用真实 Message / Bubble / ChatToolCall */}
+        <div className="space-y-4 px-4 py-4">
+          {/* 用户消息 */}
+          <Message align="end" className="w-fit max-w-full ml-auto">
+            <MessageContent>
+              <Bubble variant="default">
+                <BubbleContent className="bg-primary text-primary-foreground rounded-3xl">
+                  <div className="text-sm whitespace-pre-wrap wrap-break-word">
+                    帮我做一个智能客服的 demo
+                  </div>
+                </BubbleContent>
+              </Bubble>
+            </MessageContent>
+          </Message>
+
+          {/* AI 消息 */}
+          <Message align="start">
+            <MessageContent>
+              <Bubble variant="muted">
+                <BubbleContent className="rounded-3xl">
+                  <div className="flex flex-col gap-3">
+                    <div className="text-sm text-foreground">
+                      好的，我来帮你规划这个任务。
+                      <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-[blink_1s_steps(2)_infinite] bg-foreground/70" />
+                    </div>
+                    <ChatToolCall name="联网搜索" argument="智能客服 demo 最佳实践" />
+                  </div>
+                </BubbleContent>
+              </Bubble>
+            </MessageContent>
+          </Message>
+        </div>
+
+        {/* 输入条 */}
+        <div className="flex items-center gap-2 border-t border-border px-3 py-2.5">
+          <Paperclip className="size-4 shrink-0 text-muted-foreground/60" />
+          <div className="h-9 flex-1 rounded-lg bg-muted/60 px-3 text-sm leading-9 text-muted-foreground/70">
+            输入消息…
+          </div>
+          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
+            <Send className="size-4" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface PasswordFieldProps {
   id: string;
@@ -58,11 +137,7 @@ function PasswordField({
 }: PasswordFieldProps) {
   return (
     <div className="space-y-2">
-      <Label
-        htmlFor={id}
-        className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45"
-      >
-        <LockKeyhole className="size-3.5 text-[#E3B04B]" />
+      <Label htmlFor={id} className="text-sm font-medium text-foreground">
         {label}
       </Label>
       <div className="relative">
@@ -74,13 +149,13 @@ function PasswordField({
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           autoComplete={autoComplete}
-          className="login-field h-12 w-full rounded-[2px] border-white/15 bg-[#070A08] pr-12 text-[15px] text-[#F4F1E8] placeholder:text-white/20 focus-visible:border-[#E3B04B]/70 focus-visible:ring-[#E3B04B]/15"
+          className="h-11 pr-10"
         />
         <button
           type="button"
           onClick={onToggle}
           aria-label={visible ? '隐藏密码' : '显示密码'}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 transition-colors hover:text-[#E3B04B]"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
         >
           {visible ? <EyeOff size={17} /> : <Eye size={17} />}
         </button>
@@ -214,428 +289,361 @@ export const Login: React.FC = () => {
   const isLogin = activeTab === 'login';
 
   return (
-    <div className="login-page relative min-h-screen overflow-x-hidden">
-      <div aria-hidden="true" className="login-grid pointer-events-none absolute inset-0" />
-      <div aria-hidden="true" className="login-scanline pointer-events-none absolute inset-x-0" />
-      <div aria-hidden="true" className="login-crosshair pointer-events-none absolute right-6 top-6 hidden xl:block" />
+    <div className="flex min-h-screen bg-muted/40">
+      {/* 左 - 品牌区 */}
+      <div className="relative hidden lg:flex lg:w-[50%] flex-col justify-between overflow-hidden bg-background border-r border-border p-10 xl:p-14">
+        {/* 氛围背景 */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-24 top-10 size-[420px] rounded-full bg-primary/[0.04] blur-3xl" />
+          <div className="absolute right-0 bottom-0 size-[360px] rounded-full bg-muted blur-3xl" />
+          <div
+            className="absolute inset-0 opacity-[0.35]"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 1px 1px, hsl(var(--border)) 1px, transparent 0)',
+              backgroundSize: '26px 26px',
+            }}
+          />
+        </div>
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1720px] flex-col">
-        <header className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-8 lg:px-10">
+        <div className="relative">
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.5 }}
             className="flex items-center gap-3"
           >
-            <span className="grid size-9 place-items-center border border-[#E3B04B]/35 bg-[#E3B04B]/10 font-serif-display text-lg text-[#E3B04B]">
-              C
-            </span>
-            <span className="font-mono text-[11px] tracking-[0.22em] text-white/70">
-              CHAT / STUDIO
-            </span>
+            <div className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground">
+              <BrandMark className="size-5" />
+            </div>
+            <div className="leading-tight">
+              <p className="text-base font-semibold text-foreground">Chat Studio</p>
+              <p className="text-xs text-muted-foreground">Agent 智能体平台</p>
+            </div>
           </motion.div>
+        </div>
+
+        <div className="relative mt-8 flex flex-1 flex-col justify-center">
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.12 }}
+            className="max-w-md text-4xl xl:text-5xl font-semibold tracking-tight text-foreground leading-[1.12]"
+          >
+            构建、编排并运行你的 AI 智能体
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground"
+          >
+            通过对话、知识库与技能，打造可执行、可协作的智能体工作流。
+          </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] text-[#9FE3A2]/80"
+            transition={{ duration: 0.7, delay: 0.32 }}
+            className="mt-10"
           >
-            <span className="login-pulse-dot size-1.5 rounded-full bg-[#9FE3A2]" />
-            SIGNAL READY
+            <DemoPreview />
           </motion.div>
+        </div>
 
-          <motion.span
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-            className="hidden font-mono text-[10px] tracking-[0.18em] text-white/30 sm:block"
-          >
-            EDITION 2026.07
-          </motion.span>
-        </header>
-
-        <main className="grid flex-1 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
-          <section className="relative hidden border-r border-white/10 lg:flex">
-            <div className="flex h-full w-full flex-col justify-between p-10 xl:p-14">
-              <div>
-                <motion.p
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.55, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="mb-7 flex items-center gap-3 font-mono text-[11px] tracking-[0.26em] text-[#E3B04B]"
-                >
-                  <span className="h-px w-10 bg-[#E3B04B]/60" />
-                  AI WORKSPACE / 01
-                </motion.p>
-
-                <motion.h1
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                  className="font-serif-display text-[84px] leading-[0.9] tracking-normal text-[#F4F1E8]"
-                >
-                  Chat
-                  <span className="block italic text-[#E3B04B]">Studio</span>
-                </motion.h1>
-
-                <motion.p
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
-                  className="mt-7 max-w-md text-lg font-light leading-relaxed text-white/55"
-                >
-                  让每个想法，都能进入可执行的对话。
-                </motion.p>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="relative mt-8 grid grid-cols-2 gap-x-6 gap-y-4"
+        >
+          {features.map((f) => {
+            const Icon = f.icon;
+            return (
+              <div key={f.title} className="flex items-start gap-2.5">
+                <div className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
+                  <Icon className="size-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{f.title}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{f.desc}</p>
+                </div>
               </div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 22 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.65, delay: 0.58, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-10"
-              >
-                <div className="mb-4 flex items-center justify-between font-mono text-[10px] tracking-[0.2em] text-white/35">
-                  <span>01 INPUT</span>
-                  <span>02 ROUTE</span>
-                  <span>03 MODEL</span>
-                  <span>04 OUTPUT</span>
-                </div>
-                <div className="relative flex items-center justify-between px-3 py-7">
-                  <div aria-hidden="true" className="login-pipeline-line" />
-                  <div className="login-node" title="消息入口">
-                    <MessageSquareText size={18} />
-                  </div>
-                  <div className="login-node" title="任务编排">
-                    <Workflow size={18} />
-                  </div>
-                  <div className="login-node" title="模型路由">
-                    <Bot size={18} />
-                  </div>
-                  <div className="login-node" title="结果输出">
-                    <Zap size={18} />
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.74 }}
-                className="flex items-end justify-between border-t border-white/10 pt-5 font-mono text-[10px] tracking-[0.16em] text-white/35"
-              >
-                <p>模型路由 / 技能编排 / 会话协作</p>
-                <span className="flex items-center gap-2 text-white/45">
-                  <CircleDot size={13} className="text-[#E3B04B]" />
-                  LIVE 24/7
-                </span>
-              </motion.div>
-            </div>
-          </section>
-
-          <section className="relative flex items-center justify-center px-5 py-10 sm:px-8 lg:px-12 xl:px-16">
-            <motion.div
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-xl"
-            >
-              <div className="login-sheet px-5 py-7 sm:px-8 sm:py-9">
-                <div className="mb-8 flex items-end justify-between gap-4">
-                  <div>
-                    <p className="flex items-center gap-2 font-mono text-[10px] tracking-[0.24em] text-[#E3B04B]">
-                      <ShieldCheck size={13} />
-                      IDENTITY GATE / 0{isLogin ? '1' : '2'}
-                    </p>
-                    <h2 className="mt-3 font-serif-display text-4xl leading-tight tracking-normal text-[#F4F1E8]">
-                      {isLogin ? '欢迎回来' : '创建账户'}
-                    </h2>
-                  </div>
-                  <div className="hidden text-right font-mono text-[10px] leading-5 tracking-[0.16em] text-white/35 sm:block">
-                    <p>SECURE ACCESS</p>
-                    <p className="text-[#9FE3A2]/70">AUTH / READY</p>
-                  </div>
-                </div>
-
-                <div className="relative grid grid-cols-2 border-b border-white/10">
-                  {tabItems.map((tab) => (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={() => switchTab(tab.key)}
-                      className="relative py-4 text-center font-mono text-xs tracking-[0.2em]"
-                    >
-                      <span
-                        className={
-                          activeTab === tab.key
-                            ? 'text-[#E3B04B]'
-                            : 'text-white/35 transition-colors hover:text-white/70'
-                        }
-                      >
-                        {tab.index} / {tab.label}
-                      </span>
-                      {activeTab === tab.key && (
-                        <motion.span
-                          layoutId="login-tab-indicator"
-                          className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#E3B04B]"
-                          transition={{ type: 'spring', stiffness: 520, damping: 36 }}
-                        />
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {isLogin ? (
-                    <motion.form
-                      key="login"
-                      onSubmit={handleLoginSubmit}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.25 }}
-                      className="space-y-5 pt-7"
-                    >
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="login-email"
-                          className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45"
-                        >
-                          <Mail className="size-3.5 text-[#E3B04B]" />
-                          邮箱
-                        </Label>
-                        <Input
-                          id="login-email"
-                          type="email"
-                          placeholder="your@email.com"
-                          value={loginEmail}
-                          onChange={(e) => setLoginEmail(e.target.value)}
-                          disabled={isLoading}
-                          autoComplete="email"
-                          className="login-field h-12 w-full rounded-[2px] border-white/15 bg-[#070A08] px-4 text-[15px] text-[#F4F1E8] placeholder:text-white/20 focus-visible:border-[#E3B04B]/70 focus-visible:ring-[#E3B04B]/15"
-                        />
-                      </div>
-
-                      <PasswordField
-                        id="login-password"
-                        label="密码"
-                        placeholder="输入您的密码"
-                        value={loginPassword}
-                        onChange={setLoginPassword}
-                        visible={showPassword}
-                        onToggle={() => setShowPassword(!showPassword)}
-                        disabled={isLoading}
-                        autoComplete="current-password"
-                      />
-
-                      <div className="flex items-center gap-2.5 pt-1">
-                        <Checkbox
-                          id="remember"
-                          checked={rememberMe}
-                          onCheckedChange={(checked) => setRememberMe(checked === true)}
-                          disabled={isLoading}
-                          className="size-[18px] rounded-[3px] border-white/20 bg-white/5 data-[state=checked]:border-[#E3B04B] data-[state=checked]:bg-[#E3B04B] data-[state=checked]:text-[#0B0E0C]"
-                        />
-                        <Label
-                          htmlFor="remember"
-                          className="font-normal text-sm text-white/55"
-                        >
-                          记住我
-                        </Label>
-                      </div>
-
-                      {notice && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          aria-live="polite"
-                          className="flex items-center gap-2 border border-[#9FE3A2]/25 bg-[#9FE3A2]/10 px-3 py-2.5 font-mono text-xs text-[#9FE3A2]"
-                        >
-                          <Check size={14} />
-                          {notice}
-                        </motion.p>
-                      )}
-
-                      {error && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          aria-live="polite"
-                          className="border border-red-400/25 bg-red-400/10 px-3 py-2.5 text-center font-mono text-xs text-red-300"
-                        >
-                          {error}
-                        </motion.p>
-                      )}
-
-                      <Button
-                        type="submit"
-                        className="group h-12 w-full rounded-[2px] bg-[#E3B04B] text-[#0B0E0C] text-sm font-semibold tracking-[0.08em] hover:bg-[#F0C77B] shadow-[0_0_28px_rgba(227,176,75,0.12)] hover:shadow-[0_0_36px_rgba(227,176,75,0.2)]"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="size-4 animate-spin" />
-                            登录中...
-                          </>
-                        ) : (
-                          <>
-                            登录
-                            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                          </>
-                        )}
-                      </Button>
-                    </motion.form>
-                  ) : (
-                    <motion.form
-                      key="register"
-                      onSubmit={handleRegisterSubmit}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.25 }}
-                      className="space-y-4 pt-7"
-                    >
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="register-email"
-                          className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45"
-                        >
-                          <Mail className="size-3.5 text-[#E3B04B]" />
-                          邮箱
-                        </Label>
-                        <Input
-                          id="register-email"
-                          type="email"
-                          placeholder="your@email.com"
-                          value={registerEmail}
-                          onChange={(e) => setRegisterEmail(e.target.value)}
-                          disabled={isRegistering}
-                          autoComplete="email"
-                          className="login-field h-12 w-full rounded-[2px] border-white/15 bg-[#070A08] px-4 text-[15px] text-[#F4F1E8] placeholder:text-white/20 focus-visible:border-[#E3B04B]/70 focus-visible:ring-[#E3B04B]/15"
-                        />
-                      </div>
-
-                      <PasswordField
-                        id="register-password"
-                        label="设置密码"
-                        placeholder="至少6位密码"
-                        value={registerPassword}
-                        onChange={setRegisterPassword}
-                        visible={showRegisterPassword}
-                        onToggle={() => setShowRegisterPassword(!showRegisterPassword)}
-                        disabled={isRegistering}
-                        autoComplete="new-password"
-                      />
-
-                      <PasswordField
-                        id="confirm-password"
-                        label="确认密码"
-                        placeholder="再次输入密码"
-                        value={confirmPassword}
-                        onChange={setConfirmPassword}
-                        visible={showConfirmPassword}
-                        onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
-                        disabled={isRegistering}
-                        autoComplete="new-password"
-                      />
-
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="verification-code"
-                          className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45"
-                        >
-                          <ShieldCheck className="size-3.5 text-[#E3B04B]" />
-                          验证码
-                        </Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="verification-code"
-                            type="text"
-                            placeholder="请输入验证码"
-                            value={verificationCode}
-                            onChange={(e) => setVerificationCode(e.target.value)}
-                            disabled={isRegistering}
-                            className="login-field h-12 min-w-0 flex-1 rounded-[2px] border-white/15 bg-[#070A08] px-4 text-[15px] text-[#F4F1E8] placeholder:text-white/20 focus-visible:border-[#E3B04B]/70 focus-visible:ring-[#E3B04B]/15"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleSendVerificationCode}
-                            disabled={countdown > 0 || isSendingCode || isRegistering}
-                            className="h-12 min-w-[112px] shrink-0 rounded-[2px] border-white/15 bg-white/[0.03] font-mono text-[11px] tracking-[0.1em] text-white/60 hover:bg-[#E3B04B]/10 hover:text-[#E3B04B]"
-                          >
-                            {isSendingCode ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : countdown > 0 ? (
-                              `${countdown}秒`
-                            ) : (
-                              '发送验证码'
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="invite-code"
-                          className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45"
-                        >
-                          <KeyRound className="size-3.5 text-[#E3B04B]" />
-                          邀请码（选填）
-                        </Label>
-                        <Input
-                          id="invite-code"
-                          type="text"
-                          placeholder="请输入邀请码"
-                          value={inviteCode}
-                          onChange={(e) => setInviteCode(e.target.value)}
-                          disabled={isRegistering}
-                          className="login-field h-12 w-full rounded-[2px] border-white/15 bg-[#070A08] px-4 text-[15px] text-[#F4F1E8] placeholder:text-white/20 focus-visible:border-[#E3B04B]/70 focus-visible:ring-[#E3B04B]/15"
-                        />
-                      </div>
-
-                      {registerError && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          aria-live="polite"
-                          className="border border-red-400/25 bg-red-400/10 px-3 py-2.5 text-center font-mono text-xs text-red-300"
-                        >
-                          {registerError}
-                        </motion.p>
-                      )}
-
-                      <Button
-                        type="submit"
-                        className="group h-12 w-full rounded-[2px] bg-[#E3B04B] text-[#0B0E0C] text-sm font-semibold tracking-[0.08em] hover:bg-[#F0C77B] shadow-[0_0_28px_rgba(227,176,75,0.12)] hover:shadow-[0_0_36px_rgba(227,176,75,0.2)]"
-                        disabled={isRegistering}
-                      >
-                        {isRegistering ? (
-                          <>
-                            <Loader2 className="size-4 animate-spin" />
-                            注册中...
-                          </>
-                        ) : (
-                          <>
-                            <UserPlus className="size-4" />
-                            注册
-                          </>
-                        )}
-                      </Button>
-                    </motion.form>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <p className="mt-6 text-center font-mono text-[10px] tracking-[0.18em] text-white/25">
-                © 2026 CHAT STUDIO / ALL RIGHTS RESERVED
-              </p>
-            </motion.div>
-          </section>
-        </main>
+            );
+          })}
+        </motion.div>
       </div>
 
-      <div className="noise-overlay" />
+      {/* 右 - 表单区 */}
+      <div className="flex flex-1 items-center justify-center p-6 sm:p-10">
+        <motion.div
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="w-full max-w-md"
+        >
+          <div className="mb-6 lg:hidden">
+            <div className="flex items-center gap-3">
+              <div className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground">
+                <BrandMark className="size-5" />
+              </div>
+              <span className="text-base font-semibold text-foreground">Chat Studio</span>
+            </div>
+          </div>
+
+          <Card className="shadow-sm">
+            <CardContent className="p-6 sm:p-8">
+              <div className="mb-6">
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                  {isLogin ? '欢迎回来' : '创建账户'}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {isLogin ? '登录以继续使用 Chat Studio' : '注册以开始构建你的智能体'}
+                </p>
+              </div>
+
+              {/* Tab 切换 */}
+              <div className="relative grid grid-cols-2 rounded-lg bg-muted p-1 mb-6">
+                {tabItems.map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => switchTab(tab.key)}
+                    className="relative py-2 text-sm font-medium"
+                  >
+                    {activeTab === tab.key && (
+                      <motion.span
+                        layoutId="login-tab-bg"
+                        className="absolute inset-0 rounded-md bg-background shadow-sm"
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                    <span className={`relative z-10 transition-colors ${
+                      activeTab === tab.key ? 'text-foreground' : 'text-muted-foreground'
+                    }`}>
+                      {tab.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <AnimatePresence mode="wait">
+                {isLogin ? (
+                  <motion.form
+                    key="login"
+                    onSubmit={handleLoginSubmit}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email" className="text-sm font-medium text-foreground">邮箱</Label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        disabled={isLoading}
+                        autoComplete="email"
+                        className="h-11"
+                      />
+                    </div>
+
+                    <PasswordField
+                      id="login-password"
+                      label="密码"
+                      placeholder="输入您的密码"
+                      value={loginPassword}
+                      onChange={setLoginPassword}
+                      visible={showPassword}
+                      onToggle={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                      autoComplete="current-password"
+                    />
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <Checkbox
+                        id="remember"
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
+                        disabled={isLoading}
+                      />
+                      <Label htmlFor="remember" className="font-normal text-sm text-muted-foreground">
+                        记住我
+                      </Label>
+                    </div>
+
+                    {notice && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        aria-live="polite"
+                        className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs text-foreground"
+                      >
+                        <Check className="size-3.5 text-emerald-600" />
+                        {notice}
+                      </motion.p>
+                    )}
+
+                    {error && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        aria-live="polite"
+                        className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-center text-xs text-destructive"
+                      >
+                        {error}
+                      </motion.p>
+                    )}
+
+                    <Button
+                      type="submit"
+                      className="group h-11 w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" />
+                          登录中...
+                        </>
+                      ) : (
+                        <>
+                          登录
+                          <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                        </>
+                      )}
+                    </Button>
+                  </motion.form>
+                ) : (
+                  <motion.form
+                    key="register"
+                    onSubmit={handleRegisterSubmit}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="register-email" className="text-sm font-medium text-foreground">邮箱</Label>
+                      <Input
+                        id="register-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={registerEmail}
+                        onChange={(e) => setRegisterEmail(e.target.value)}
+                        disabled={isRegistering}
+                        autoComplete="email"
+                        className="h-11"
+                      />
+                    </div>
+
+                    <PasswordField
+                      id="register-password"
+                      label="设置密码"
+                      placeholder="至少6位密码"
+                      value={registerPassword}
+                      onChange={setRegisterPassword}
+                      visible={showRegisterPassword}
+                      onToggle={() => setShowRegisterPassword(!showRegisterPassword)}
+                      disabled={isRegistering}
+                      autoComplete="new-password"
+                    />
+
+                    <PasswordField
+                      id="confirm-password"
+                      label="确认密码"
+                      placeholder="再次输入密码"
+                      value={confirmPassword}
+                      onChange={setConfirmPassword}
+                      visible={showConfirmPassword}
+                      onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                      disabled={isRegistering}
+                      autoComplete="new-password"
+                    />
+
+                    <div className="space-y-2">
+                      <Label htmlFor="verification-code" className="text-sm font-medium text-foreground">验证码</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="verification-code"
+                          type="text"
+                          placeholder="请输入验证码"
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value)}
+                          disabled={isRegistering}
+                          className="h-11 min-w-0 flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleSendVerificationCode}
+                          disabled={countdown > 0 || isSendingCode || isRegistering}
+                          className="h-11 min-w-[100px] shrink-0"
+                        >
+                          {isSendingCode ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : countdown > 0 ? (
+                            `${countdown}秒`
+                          ) : (
+                            '发送验证码'
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="invite-code" className="text-sm font-medium text-foreground">邀请码（选填）</Label>
+                      <Input
+                        id="invite-code"
+                        type="text"
+                        placeholder="请输入邀请码"
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value)}
+                        disabled={isRegistering}
+                        className="h-11"
+                      />
+                    </div>
+
+                    {registerError && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        aria-live="polite"
+                        className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-center text-xs text-destructive"
+                      >
+                        {registerError}
+                      </motion.p>
+                    )}
+
+                    <Button
+                      type="submit"
+                      className="h-11 w-full"
+                      disabled={isRegistering}
+                    >
+                      {isRegistering ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" />
+                          注册中...
+                        </>
+                      ) : (
+                        '注册'
+                      )}
+                    </Button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+            </CardContent>
+          </Card>
+
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            © 2026 Chat Studio · Agent 智能体平台
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 };

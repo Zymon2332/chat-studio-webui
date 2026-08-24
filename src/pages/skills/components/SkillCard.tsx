@@ -32,8 +32,8 @@ export function SkillCard({
         className,
       )}
     >
-      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#D4A040]/20 to-[#D4A040]/5 flex items-center justify-center mb-4">
-        <Wrench className="w-6 h-6 text-primary" />
+      <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
+        <Wrench className="w-6 h-6 text-muted-foreground" />
       </div>
 
       <h3 className="text-sm font-medium text-sidebar-foreground/90 truncate">

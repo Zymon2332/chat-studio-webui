@@ -359,7 +359,7 @@ export function ConversationPage() {
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50">
               <div className="flex items-center justify-between px-6 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-1 h-5 rounded-full bg-[#D4A040]" />
+                  <div className="w-1 h-5 rounded-full bg-primary" />
                   <h1 className="text-sm font-medium text-foreground/90">
                     {displayTitle}
                   </h1>
@@ -373,7 +373,7 @@ export function ConversationPage() {
                   </Button>
                 </div>
               </div>
-              <div className="h-px bg-gradient-to-r from-[#D4A040]/20 via-transparent to-transparent" />
+              <div className="h-px bg-border" />
             </div>
           )}
 
@@ -381,19 +381,19 @@ export function ConversationPage() {
           {isLoadingHistory ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">
-                <div className="w-6 h-6 rounded-full border-2 border-[#D4A040]/30 border-t-[#D4A040] animate-spin" />
+                <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/30 border-t-foreground animate-spin" />
                 <Shimmer duration={1.5} className="text-sm text-muted-foreground">正在努力加载中...</Shimmer>
               </div>
             </div>
           ) : displayMessages.length === 0 ? (
             /* Empty state */
             <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-              <div className="w-12 h-12 rounded-full bg-[#D4A040]/10 flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-[#D4A040]" />
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-muted-foreground" />
               </div>
               <div>
-                <h3 className="text-base font-serif-display text-foreground/80 mb-1">开始对话</h3>
-                <p className="text-sm text-muted-foreground/60">发送一条消息，开始你的 AI 协作</p>
+                <h3 className="text-base font-semibold text-foreground/80 mb-1">开始对话</h3>
+                <p className="text-sm text-muted-foreground/70">发送一条消息，开始你的 AI 协作</p>
               </div>
             </div>
           ) : (
@@ -408,7 +408,7 @@ export function ConversationPage() {
               <div className="max-w-4xl mx-auto px-4 pb-4 pt-3">
                 <div className="relative">
                   {isInputFocused && (
-                    <div className="absolute -inset-1 rounded-2xl bg-gradient-to-b from-[#D4A040]/10 to-transparent pointer-events-none" />
+                    <div className="absolute -inset-1 rounded-2xl bg-muted/60 pointer-events-none" />
                   )}
                   <ChatInput
                     ref={chatInputRef}
@@ -458,7 +458,7 @@ export function ConversationPage() {
                 loadingWorkspace ? (
                   <div className="flex-1 overflow-y-auto px-3 pt-2 pb-4">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <div className="w-4 h-4 rounded-full border-2 border-[#D4A040]/30 border-t-[#D4A040] animate-spin" />
+                      <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30 border-t-foreground animate-spin" />
                       加载中...
                     </div>
                   </div>
