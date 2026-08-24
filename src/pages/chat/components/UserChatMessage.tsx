@@ -22,11 +22,11 @@ export const UserChatMessage = memo(function UserChatMessage({
   };
 
   return (
-    <Message align="end" className="w-fit ml-auto">
+    <Message align="end" className="w-fit max-w-full ml-auto">
       <MessageContent>
         <Bubble variant="default">
           <BubbleContent className="bg-primary text-primary-foreground rounded-3xl">
-            <div className="text-sm whitespace-pre-wrap break-normal">{text}</div>
+            <div className="text-sm whitespace-pre-wrap wrap-break-word">{text}</div>
           </BubbleContent>
         </Bubble>
         <MessageFooter className="opacity-0 group-hover/message:opacity-100 transition-opacity">
