@@ -83,7 +83,6 @@ export function ConversationPage() {
   const pendingData = sessionStorage.getItem(pendingKey);
   const isNewSession = !!pendingData;
   const pendingMsg = pendingData ? JSON.parse(pendingData) as { message: string; model: Model; skillIds?: string[]; agentIds?: string[] } : null;
-  const preservedTitle = useRef(pendingMsg?.message || sessionTitle || "");
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(!isNewSession);
   const activeIdRef = useRef<string | null>(null);
@@ -342,8 +341,8 @@ export function ConversationPage() {
   const MAX_TITLE_LENGTH = 20;
 
   const headerTitle = useMemo(() => {
-    return preservedTitle.current || sessionTitle;
-  }, [sessionTitle]);
+    return pendingMsg?.message || sessionTitle || "";
+  }, [id]);
 
   const displayTitle =
     headerTitle.length > MAX_TITLE_LENGTH
