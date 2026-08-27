@@ -57,8 +57,21 @@ export interface DoneData {
   currentTokenLength: number;
 }
 
+export type ContentType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "PDF";
+
+export interface InputContent {
+  uploadId?: string;
+  content?: string;
+  contentType: ContentType;
+}
+
+export interface FileInputContent {
+  uploadId: string;
+  contentType: Exclude<ContentType, "TEXT">;
+}
+
 interface ChatStreamParams {
-  prompt: string;
+  inputContents: InputContent[];
   sessionId: string;
   modelId: number;
   skillIds?: string[];
@@ -70,7 +83,7 @@ interface ChatStreamParams {
 }
 
 export function chatStream({
-  prompt,
+  inputContents,
   sessionId,
   modelId,
   skillIds,
@@ -131,7 +144,7 @@ export function chatStream({
         },
         credentials: "include",
         body: JSON.stringify({
-          prompt,
+          inputContents,
           sessionId,
           modelId,
           skillIds,

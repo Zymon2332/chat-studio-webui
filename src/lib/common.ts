@@ -31,7 +31,7 @@ export interface PostSignatureResponse {
 /**
  * 文件上传业务分类
  */
-export type AppId = 'DOCUMENT' | 'SKILLS';
+export type AppId = 'DOCUMENT' | 'SKILLS' | 'USER_FILES';
 
 /**
  * 上传确认请求
@@ -128,5 +128,33 @@ export const uploadFileToS3 = async (
 
     xhr.open('POST', uploadUrl);
     xhr.send(formData);
+  });
+};
+
+/**
+ * 上传用户文件到 S3 并获取 uploadId（供聊天 inputContents 使用）
+ * @param file 要上传的文件
+ * @param onProgress 上传进度回调（0-100）
+ * @returns uploadId
+ */
+export const uploadUserFile = async (
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<string> => {
+  const contentType = file.type || 'application/octet-stream';
+
+  const signature = await fetchPostSignature({
+    fileOriginalName: file.name,
+    contentType,
+    appId: 'USER_FILES',
+  });
+
+  await uploadFileToS3(file, contentType, signature, onProgress);
+
+  return confirmUpload({
+    objectKey: signature.fields.key,
+    originalFileName: file.name,
+    taskId: signature.taskId,
+    appId: 'USER_FILES',
   });
 };

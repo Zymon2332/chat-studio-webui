@@ -16,9 +16,12 @@ export interface ApiAIContent {
   attributes: Record<string, any>;
 }
 
+// 用户消息内容类型
+export type UserContentType = "TEXT" | "IMAGE" | "AUDIO" | "VIDEO" | "PDF";
+
 // 用户消息 - 新格式
 export interface UserMessage {
-  contents: Array<{ contentType: "TEXT"; text: string }>;
+  contents: Array<{ type: UserContentType; text?: string; url?: string }>;
   messageType: "USER";
   attributes: Record<string, any>;  // 包含 dateTime 等字段
 }

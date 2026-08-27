@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ChatInput, type ChatInputRef } from "./components/ChatInput";
+import { ChatInput, type ChatInputRef, type SendPayload } from "./components/ChatInput";
 import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion";
 import { createSession } from "@/lib/session";
 import { useSession } from "@/contexts/SessionContext";
@@ -31,7 +31,7 @@ export function ChatPage() {
   const [mode, setMode] = useState<Mode>("office");
   const config = modeConfig[mode];
 
-  const handleSend = async (message: string) => {
+  const handleSend = async (payload: SendPayload) => {
     const model = chatInputRef.current?.getSelectedModel();
     const skillIds = chatInputRef.current?.getSkillIds();
     const agentIds = chatInputRef.current?.getAgentIds();
@@ -45,10 +45,10 @@ export function ChatPage() {
       const sessionId = await createSession();
       sessionStorage.setItem(
         `pending-msg-${sessionId}`,
-        JSON.stringify({ message, model, skillIds, agentIds })
+        JSON.stringify({ text: payload.text, fileContents: payload.fileContents, model, skillIds, agentIds })
       );
       navigate(`/conversation/${sessionId}`);
-      addSession(sessionId, message);
+      addSession(sessionId, payload.text || "新任务");
     } catch {
       toast.error("创建会话失败，请检查网络后重试");
     }

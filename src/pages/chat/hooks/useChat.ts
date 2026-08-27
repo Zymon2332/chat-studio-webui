@@ -1,9 +1,20 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { chatStream, generateId, type StreamEvent } from "../lib/chat";
+import { chatStream, generateId, type StreamEvent, type InputContent, type FileInputContent, type ContentType } from "../lib/chat";
 import type { DoneData } from "../lib/chat";
 import { getSessionTokenUsage, getTokenContextWindow } from "@/lib/session";
 import type { Model } from "@/lib/models";
 import type { Message, AIMessage, StreamingContent, StreamingItem } from "@/types/chat";
+
+export function buildInputContents(text: string, fileContents: FileInputContent[]): InputContent[] {
+  const result: InputContent[] = [];
+  if (text) {
+    result.push({ contentType: "TEXT", content: text });
+  }
+  for (const file of fileContents) {
+    result.push({ contentType: file.contentType, uploadId: file.uploadId, content: "" });
+  }
+  return result;
+}
 
 interface StreamEntry {
   streamingContent: StreamingContent;
@@ -219,16 +230,21 @@ export function useChat(sessionId: string, modelId?: number) {
   }
 
   const sendMessage = useCallback(
-    async (prompt: string, model: Model, skillIds?: string[], agentIds?: string[]) => {
+    async (payload: { text: string; fileContents: { uploadId: string; contentType: Exclude<ContentType, "TEXT">; url: string }[] }, model: Model, skillIds?: string[], agentIds?: string[]) => {
       if (isStreaming) return;
 
       summarizingNotifiedRef.current = false;
 
+      const inputContents = buildInputContents(payload.text, payload.fileContents);
+
       const userMessage: Message = {
-        contents: [{ contentType: "TEXT", text: prompt }],
         messageType: "USER",
+        contents: [
+          ...(payload.text ? [{ type: "TEXT" as const, text: payload.text }] : []),
+          ...payload.fileContents.map((f) => ({ type: f.contentType, url: f.url })),
+        ],
         attributes: {},
-      };
+      } as Message;
 
       const aiMessageId = generateId();
       const aiPlaceholderMessage: Message = {
@@ -245,7 +261,7 @@ export function useChat(sessionId: string, modelId?: number) {
       initStream("chat", aiMessageId);
       setIsStreaming(true);
       const cancel = chatStream({
-        prompt,
+        inputContents,
         sessionId,
         modelId: model.id,
         skillIds,

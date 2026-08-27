@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import { ChatInput, type ChatInputRef } from "./components/ChatInput";
+import { ChatInput, type ChatInputRef, type SendPayload } from "./components/ChatInput";
 import { ChatMessages, type ChatMessagesRef } from "./components/ChatMessages";
 import {
   Context,
@@ -82,7 +82,7 @@ export function ConversationPage() {
   const pendingKey = `pending-msg-${id}`;
   const pendingData = sessionStorage.getItem(pendingKey);
   const isNewSession = !!pendingData;
-  const pendingMsg = pendingData ? JSON.parse(pendingData) as { message: string; model: Model; skillIds?: string[]; agentIds?: string[] } : null;
+  const pendingMsg = pendingData ? JSON.parse(pendingData) as { text: string; fileContents: SendPayload["fileContents"]; model: Model; skillIds?: string[]; agentIds?: string[] } : null;
   const [historyMessages, setHistoryMessages] = useState<Message[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(!isNewSession);
   const activeIdRef = useRef<string | null>(null);
@@ -277,11 +277,16 @@ export function ConversationPage() {
     ) {
       initialMessageSent.current = true;
       sessionStorage.removeItem(pendingKey);
-      sendMessage(pendingMsg.message, pendingMsg.model, pendingMsg.skillIds, pendingMsg.agentIds);
+      sendMessage(
+        { text: pendingMsg.text, fileContents: pendingMsg.fileContents || [] },
+        pendingMsg.model,
+        pendingMsg.skillIds,
+        pendingMsg.agentIds
+      );
     }
   }, [pendingMsg, pendingKey, isLoadingHistory, historyMessages.length, sendMessage]);
 
-  const handleSend = async (text: string) => {
+  const handleSend = async (payload: SendPayload) => {
     if (!id) return;
     chatMessagesRef.current?.scrollToBottom();
 
@@ -293,7 +298,7 @@ export function ConversationPage() {
       return;
     }
 
-    await sendMessage(text, model, skillIds, agentIds);
+    await sendMessage(payload, model, skillIds, agentIds);
   };
 
   function buildFileTree(paths: string[]): React.ReactNode {
@@ -341,7 +346,7 @@ export function ConversationPage() {
   const MAX_TITLE_LENGTH = 20;
 
   const headerTitle = useMemo(() => {
-    return pendingMsg?.message || sessionTitle || "";
+    return pendingMsg?.text || sessionTitle || "";
   }, [id]);
 
   const displayTitle =
