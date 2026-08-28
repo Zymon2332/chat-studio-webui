@@ -4,6 +4,22 @@ import { useState, useMemo } from "react";
 import { Copy, ThumbsUp, ThumbsDown, Share2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function normalizeTs(dateTime: string | number | undefined | null): Date | null {
+  if (dateTime == null || dateTime === "") return null;
+  let date: Date;
+  if (typeof dateTime === "number") {
+    date = new Date(dateTime < 1e12 ? dateTime * 1000 : dateTime);
+  } else {
+    const num = Number(dateTime);
+    if (Number.isFinite(num)) {
+      date = new Date(num < 1e12 ? num * 1000 : num);
+    } else {
+      date = new Date(dateTime);
+    }
+  }
+  return isNaN(date.getTime()) ? null : date;
+}
+
 interface MessageActionsProps {
   mode: "user" | "ai";
   dateTime?: string;
@@ -55,6 +71,23 @@ export function MessageActions({
     return `${tokenUsage} tokens`;
   }, [tokenUsage]);
 
+  const timeDisplay = useMemo(() => {
+    const d = normalizeTs(dateTime);
+    if (!d) return null;
+    const now = new Date();
+    const fmt = (x: Date) => x.toDateString();
+    const time = d.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+
+    if (fmt(d) === fmt(now)) return time;
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (fmt(d) === fmt(yesterday)) return `昨天 ${time}`;
+    if (d.getFullYear() === now.getFullYear()) {
+      return `${d.getMonth() + 1}月${d.getDate()}日 ${time}`;
+    }
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${time}`;
+  }, [dateTime]);
+
   if (mode === "user") {
     return (
       <div className={cn("flex items-center gap-2", className)}>
@@ -69,7 +102,7 @@ export function MessageActions({
             <Copy className="size-3.5" />
           )}
         </button>
-        {dateTime && <span className="text-xs text-muted-foreground">{dateTime}</span>}
+        {timeDisplay && <span className="text-xs text-muted-foreground">{timeDisplay}</span>}
       </div>
     );
   }

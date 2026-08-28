@@ -30,10 +30,25 @@ interface ChatMessagesProps {
   messages: Message[];
 }
 
-function getDateLabel(dateStr: string): string | null {
-  if (!dateStr) return null;
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return null;
+function normalizeTs(dateTime: string | number | undefined | null): Date | null {
+  if (dateTime == null || dateTime === "") return null;
+  let date: Date;
+  if (typeof dateTime === "number") {
+    date = new Date(dateTime < 1e12 ? dateTime * 1000 : dateTime);
+  } else {
+    const num = Number(dateTime);
+    if (Number.isFinite(num)) {
+      date = new Date(num < 1e12 ? num * 1000 : num);
+    } else {
+      date = new Date(dateTime);
+    }
+  }
+  return isNaN(date.getTime()) ? null : date;
+}
+
+function getDateLabel(dateStr: string | number | undefined | null): string | null {
+  const date = normalizeTs(dateStr);
+  if (!date) return null;
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
